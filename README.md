@@ -1,5 +1,5 @@
 # Alluxio Extensions
-The master branch is in version 1.5.0-SNAPSHOT. 
+The master branch is in version 1.6.0-SNAPSHOT. 
 
 This repository contains extensions to core [Alluxio](https://github.com/Alluxio/alluxio).
 
