@@ -63,7 +63,7 @@
       <version>${jets3t.version}</version>
     </dependency>
 
-    <!-- Internal dependencies -->
+    <!-- Core Alluxio dependencies -->
     <dependency>
       <groupId>org.alluxio</groupId>
       <artifactId>alluxio-core-common</artifactId>
