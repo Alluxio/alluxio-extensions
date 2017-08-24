@@ -13,9 +13,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.alluxio</groupId>
-  <artifactId>alluxio-underfs-s3</artifactId>
-  <name>Alluxio Under File System - S3</name>
-  <description>S3 Under File System implementation</description>
+  <artifactId>alluxio-underfs-s3n</artifactId>
+  <name>Alluxio Under File System - S3N</name>
+  <description>S3 Under File System implementation (Legacy)</description>
   <version>1.6.0-SNAPSHOT</version>
 
   <repositories>
