@@ -45,6 +45,7 @@
   </repositories>
 
   <properties>
+    <alluxio.version>1.6.0-SNAPSHOT</alluxio.version>
     <build.path>build</build.path>
     <java.version>1.7</java.version>
     <jets3t.version>0.8.1</jets3t.version>
@@ -71,7 +72,7 @@
       <dependency>
         <groupId>org.alluxio</groupId>
         <artifactId>alluxio-core-common</artifactId>
-        <version>${project.version}</version>
+        <version>${alluxio.version}</version>
       </dependency>
 
       <!-- Core Alluxio test dependencies -->
