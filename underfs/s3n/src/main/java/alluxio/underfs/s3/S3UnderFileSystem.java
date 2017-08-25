@@ -12,7 +12,6 @@
 package alluxio.underfs.s3;
 
 import alluxio.AlluxioURI;
-import alluxio.Constants;
 import alluxio.PropertyKey;
 import alluxio.underfs.ObjectUnderFileSystem;
 import alluxio.underfs.UnderFileSystem;
@@ -54,6 +53,9 @@ public class S3UnderFileSystem extends ObjectUnderFileSystem {
 
   /** Suffix for an empty file to flag it as a directory. */
   private static final String FOLDER_SUFFIX = "_$folder$";
+
+  /** Scheme used for mounting {@link S3UnderFileSystem} */
+  public static final String HEADER_S3N = "s3n://";
 
   private static final byte[] DIR_HASH;
 
@@ -335,7 +337,7 @@ public class S3UnderFileSystem extends ObjectUnderFileSystem {
 
   @Override
   protected String getRootKey() {
-    return Constants.HEADER_S3N + mBucketName;
+    return HEADER_S3N + mBucketName;
   }
 
   @Override
