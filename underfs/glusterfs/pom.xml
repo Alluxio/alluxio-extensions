@@ -143,6 +143,7 @@
       <groupId>org.alluxio</groupId>
       <artifactId>alluxio-core-common</artifactId>
       <type>test-jar</type>
+      <scope>test</scope>
     </dependency>
 
     <!-- External test dependencies -->
