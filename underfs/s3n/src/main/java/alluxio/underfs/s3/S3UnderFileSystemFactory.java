@@ -55,7 +55,7 @@ public class S3UnderFileSystemFactory implements UnderFileSystemFactory {
 
   @Override
   public boolean supportsPath(String path) {
-    return path != null && path.startsWith(Constants.HEADER_S3N);
+    return path != null && path.startsWith(S3UnderFileSystem.HEADER_S3N);
   }
 
   /**
