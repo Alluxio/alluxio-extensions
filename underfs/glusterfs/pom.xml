@@ -1,0 +1,236 @@
+<!--
+
+    The Alluxio Open Foundation licenses this work under the Apache License, version 2.0
+    (the "License"). You may not use this work except in compliance with the License, which is
+    available at www.apache.org/licenses/LICENSE-2.0
+
+    This software is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+    either express or implied, as more fully set forth in the License.
+
+    See the NOTICE file distributed with this work for information regarding copyright ownership.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.alluxio</groupId>
+  <artifactId>alluxio-underfs-glusterfs</artifactId>
+  <version>1.6.0-SNAPSHOT</version>
+  <name>Alluxio Under File System - Gluster FS</name>
+  <description>Gluster FS Under File System implementation</description>
+
+  <repositories>
+    <repository>
+      <id>central</id>
+      <!-- This should be at top, it makes maven try the central repo first and then others and hence faster dep resolution -->
+      <name>Maven Repository</name>
+      <url>https://repo1.maven.org/maven2</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>apache-repo</id>
+      <name>Apache Repository</name>
+      <url>https://repository.apache.org/content/repositories/releases</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <properties>
+    <alluxio.version>1.6.0-SNAPSHOT</alluxio.version>
+    <build.path>build</build.path>
+    <glusterfs-hadoop.version>2.3.13</glusterfs-hadoop.version>
+    <hadoop.version>2.3.0</hadoop.version>
+    <java.version>1.7</java.version>
+    <junit.version>4.12</junit.version>
+    <maven.version>3.3.9</maven.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- External dependencies -->
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>14.0.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+        <!-- The hadoop version glusterfs-hadoop depends on -->
+        <version>${hadoop.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-hdfs</artifactId>
+        <!-- The hadoop version glusterfs-hadoop depends on -->
+        <version>${hadoop.version}</version>
+      </dependency>
+      <!-- Used through reflection -->
+      <dependency>
+        <groupId>org.gluster</groupId>
+        <artifactId>glusterfs-hadoop</artifactId>
+        <version>${glusterfs-hadoop.version}</version>
+      </dependency>
+
+      <!-- Core Alluxio dependencies -->
+      <dependency>
+        <groupId>org.alluxio</groupId>
+        <artifactId>alluxio-core-common</artifactId>
+        <version>${alluxio.version}</version>
+      </dependency>
+
+      <!-- Core Alluxio test dependencies -->
+      <dependency>
+        <groupId>org.alluxio</groupId>
+        <artifactId>alluxio-core-common</artifactId>
+        <version>${alluxio.version}</version>
+        <type>test-jar</type>
+      </dependency>
+
+      <!-- External test dependencies -->
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>3.4</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <!-- External dependencies -->
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-hdfs</artifactId>
+    </dependency>
+    <!-- Used through reflection -->
+    <dependency>
+      <groupId>org.gluster</groupId>
+      <artifactId>glusterfs-hadoop</artifactId>
+    </dependency>
+
+    <!-- Core Alluxio dependencies -->
+    <dependency>
+      <groupId>org.alluxio</groupId>
+      <artifactId>alluxio-core-common</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Core Alluxio test dependencies -->
+    <dependency>
+      <groupId>org.alluxio</groupId>
+      <artifactId>alluxio-core-common</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- External test dependencies -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <profiles>
+    <profile>
+      <id>ufsContractTest</id>
+      <activation>
+        <property>
+          <name>testGlusterFSBaseDir</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <testExcludes combine.self="override"/>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.2</version>
+          <configuration>
+            <source>${java.version}</source>
+            <target>${java.version}</target>
+            <encoding>UTF-8</encoding>
+            <maxmem>1024m</maxmem>
+            <compilerArgs>
+              <arg>-Xlint:none</arg>
+            </compilerArgs>
+            <testExcludes>
+              <!-- Skip UFS contract tests unless -DtestGlusterFSBaseDir="glusterfs:///alluxio_test" is specified -->
+              <exclude>**/GlusterFSUnderFileSystemContractTest.java</exclude>
+            </testExcludes>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.4.3</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>LICENSE</exclude>
+                    <exclude>META-INF/LICENSE</exclude>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
