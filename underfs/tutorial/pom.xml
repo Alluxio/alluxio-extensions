@@ -46,7 +46,6 @@
 
   <properties>
     <alluxio.version>1.6.0-SNAPSHOT</alluxio.version>
-    <build.path>build</build.path>
     <java.version>1.7</java.version>
     <junit.version>4.12</junit.version>
     <log4j.version>1.2.17</log4j.version>
@@ -169,11 +168,6 @@
               <exclude>**/DummyUnderFileSystemContractTest.java</exclude>
             </testExcludes>
           </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>findbugs-maven-plugin</artifactId>
-          <version>3.0.2</version>
         </plugin>
       </plugins>
     </pluginManagement>
