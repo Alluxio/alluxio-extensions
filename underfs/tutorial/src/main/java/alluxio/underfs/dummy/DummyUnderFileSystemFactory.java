@@ -42,6 +42,6 @@ public class DummyUnderFileSystemFactory implements UnderFileSystemFactory {
     if (path == null) {
       return false;
     }
-    return path.startsWith("dummy");
+    return path.startsWith(DummyUnderFileSystem.DUMMY_SCHEME);
   }
 }

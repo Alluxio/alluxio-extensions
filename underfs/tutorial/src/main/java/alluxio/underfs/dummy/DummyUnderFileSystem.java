@@ -63,6 +63,8 @@ public class DummyUnderFileSystem extends BaseUnderFileSystem
     implements AtomicFileOutputStreamCallback {
   private static final Logger LOG = LoggerFactory.getLogger(DummyUnderFileSystem.class);
 
+  public static final String DUMMY_SCHEME = "dummy";
+
   /**
    * Constructs a new {@link DummyUnderFileSystem}.
    *
@@ -398,6 +400,10 @@ public class DummyUnderFileSystem extends BaseUnderFileSystem
    * @return the path, with the optional scheme stripped away
    */
   private String stripPath(String path) {
+    final String header = String.format("%s://", DUMMY_SCHEME);
+    if (path.startsWith(header)) {
+      path = path.substring(header.length());
+    }
     return new AlluxioURI(path).getPath();
   }
 }
