@@ -37,7 +37,7 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public class DummyUnderFileSystem extends BaseUnderFileSystem {
-  public static final String DUMMY_SCHEME = "dummy:/";
+  public static final String DUMMY_SCHEME = "dummy://";
 
   private UnderFileSystem mLocalUnderFileSystem;
 
