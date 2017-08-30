@@ -61,6 +61,12 @@
         <artifactId>annotations</artifactId>
         <version>3.0.1</version>
       </dependency>
+      <!-- Only for tutorial -->
+      <dependency>
+        <groupId>org.alluxio</groupId>
+        <artifactId>alluxio-underfs-local</artifactId>
+        <version>${alluxio.version}</version>
+      </dependency>
 
       <!-- Core Alluxio dependencies -->
       <dependency>
@@ -91,6 +97,11 @@
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>annotations</artifactId>
+    </dependency>
+    <!-- Only for tutorial -->
+    <dependency>
+      <groupId>org.alluxio</groupId>
+      <artifactId>alluxio-underfs-local</artifactId>
     </dependency>
 
     <!-- Core Alluxio dependencies -->
