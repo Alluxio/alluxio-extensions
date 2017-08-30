@@ -37,7 +37,7 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public class DummyUnderFileSystem extends BaseUnderFileSystem {
-  public static final String DUMMY_SCHEME = "dummy";
+  public static final String DUMMY_SCHEME = "dummy:/";
 
   private UnderFileSystem mLocalUnderFileSystem;
 
@@ -180,9 +180,8 @@ public class DummyUnderFileSystem extends BaseUnderFileSystem {
    * @return the path, with the optional scheme stripped away
    */
   private String stripPath(String path) {
-    final String header = String.format("%s://", DUMMY_SCHEME);
-    if (path.startsWith(header)) {
-      path = path.substring(header.length());
+    if (path.startsWith(DUMMY_SCHEME)) {
+      path = path.substring(DUMMY_SCHEME.length());
     }
     return new AlluxioURI(path).getPath();
   }
