@@ -33,7 +33,8 @@ import java.util.List;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * Dummy {@link UnderFileSystem} implementation for tutorial.
+ * Dummy {@link UnderFileSystem} implementation for tutorial. All operations are delegated to a
+ * {@link LocalUnderFileSystem}.
  */
 @ThreadSafe
 public class DummyUnderFileSystem extends BaseUnderFileSystem {

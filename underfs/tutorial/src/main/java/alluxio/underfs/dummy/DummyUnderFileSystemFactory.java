@@ -26,11 +26,6 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public class DummyUnderFileSystemFactory implements UnderFileSystemFactory {
 
-  /**
-   * Constructs a new {@link DummyUnderFileSystemFactory}.
-   */
-  public DummyUnderFileSystemFactory() {}
-
   @Override
   public UnderFileSystem create(String path, UnderFileSystemConfiguration conf) {
     Preconditions.checkArgument(path != null, "path may not be null");

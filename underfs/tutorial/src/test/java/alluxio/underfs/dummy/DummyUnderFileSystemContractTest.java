@@ -19,7 +19,7 @@ import com.google.common.base.Preconditions;
 import org.junit.BeforeClass;
 
 /**
- * This UFS contract test {@link DummyUnderFileSystem} as the backing store.
+ * This UFS contract test will use {@link DummyUnderFileSystem} as the backing store.
  */
 public final class DummyUnderFileSystemContractTest extends AbstractUnderFileSystemContractTest {
   private static final String TEST_PATH_CONF = "testTutorialUFS";
