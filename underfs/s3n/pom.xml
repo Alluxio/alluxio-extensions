@@ -18,6 +18,7 @@
   <description>S3 Under File System implementation (Legacy)</description>
   <version>1.6.0-SNAPSHOT</version>
 
+
   <repositories>
     <repository>
       <id>central</id>
@@ -48,11 +49,12 @@
     <alluxio.version>1.6.0-SNAPSHOT</alluxio.version>
     <build.path>build</build.path>
     <java.version>1.7</java.version>
-    <jets3t.version>0.8.1</jets3t.version>
+    <jets3t.version>0.9.4</jets3t.version>
     <junit.version>4.12</junit.version>
     <log4j.version>1.2.17</log4j.version>
     <maven.version>3.3.9</maven.version>
   </properties>
+
 
   <dependencyManagement>
     <dependencies>
@@ -82,6 +84,7 @@
         <version>${project.version}</version>
         <type>test-jar</type>
       </dependency>
+
 
       <!-- External test dependencies -->
       <dependency>
