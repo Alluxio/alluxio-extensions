@@ -18,7 +18,6 @@
   <description>S3 Under File System implementation (Legacy)</description>
   <version>1.6.0-SNAPSHOT</version>
 
-
   <repositories>
     <repository>
       <id>central</id>
