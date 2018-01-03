@@ -117,6 +117,11 @@ public class DummyUnderFileSystem extends BaseUnderFileSystem {
   }
 
   @Override
+  public UfsStatus getStatus(String path) throws IOException {
+    return mLocalUnderFileSystem.getStatus(path);
+  }
+
+  @Override
   public boolean isDirectory(String path) throws IOException {
     return mLocalUnderFileSystem.isDirectory(stripPath(path));
   }

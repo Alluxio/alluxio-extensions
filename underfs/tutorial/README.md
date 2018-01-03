@@ -5,7 +5,7 @@ Dummy Alluxio under storage implementation accessing local file system using the
 ### Build
 
 ```bash
-mvn package
+mvn package -DskipTests
 ```
 
 ### Run Under Storage Contract Tests
