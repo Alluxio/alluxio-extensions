@@ -11,8 +11,6 @@
 
 package alluxio.underfs.oss;
 
-import alluxio.util.io.PathUtils;
-
 import com.google.common.base.Preconditions;
 import com.obs.services.ObsClient;
 import com.obs.services.exception.ObsException;
@@ -31,7 +29,6 @@ import java.io.OutputStream;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.concurrent.NotThreadSafe;
@@ -78,7 +75,7 @@ public final class OBSOutputStream extends OutputStream {
     mKey = key;
     mObsClient = client;
 
-    mFile = new File(PathUtils.concatPath("/tmp", UUID.randomUUID()));
+    mFile = File.createTempFile("alluxio-obs", ".tmp");
 
     try {
       mHash = MessageDigest.getInstance("MD5");
@@ -142,6 +139,7 @@ public final class OBSOutputStream extends OutputStream {
   @Override
   public void close() throws IOException {
     if (mClosed.getAndSet(true)) {
+      LOG.warn("OBSOutputStream is already closed");
       return;
     }
     mLocalOutputStream.close();
