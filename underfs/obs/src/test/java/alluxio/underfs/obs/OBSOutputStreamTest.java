@@ -9,7 +9,7 @@
  * See the NOTICE file distributed with this work for information regarding copyright ownership.
  */
 
-package alluxio.underfs.oss;
+package alluxio.underfs.obs;
 
 import com.obs.services.ObsClient;
 import com.obs.services.exception.ObsException;
