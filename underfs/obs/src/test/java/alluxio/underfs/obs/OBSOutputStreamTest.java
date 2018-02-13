@@ -65,7 +65,9 @@ public class OBSOutputStreamTest {
   @Test
   @PrepareForTest(OBSOutputStream.class)
   public void testConstructor() throws Exception {
-    PowerMockito.whenNew(File.class).withArguments(Mockito.anyString()).thenReturn(mFile);
+    PowerMockito.mockStatic(File.class);
+    PowerMockito.when(File.createTempFile(Mockito.anyString(), Mockito.anyString()))
+        .thenReturn(mFile);
     String errorMessage = "protocol doesn't support output";
     PowerMockito.whenNew(FileOutputStream.class).withArguments(mFile)
             .thenThrow(new IOException(errorMessage));
@@ -153,7 +155,9 @@ public class OBSOutputStreamTest {
   @Test
   @PrepareForTest(OBSOutputStream.class)
   public void testCloseSuccess() throws Exception {
-    PowerMockito.whenNew(File.class).withArguments(Mockito.anyString()).thenReturn(mFile);
+    PowerMockito.mockStatic(File.class);
+    PowerMockito.when(File.createTempFile(Mockito.anyString(), Mockito.anyString()))
+        .thenReturn(mFile);
     FileOutputStream outputStream = PowerMockito.mock(FileOutputStream.class);
     PowerMockito.whenNew(FileOutputStream.class).withArguments(mFile).thenReturn(outputStream);
     FileInputStream inputStream = PowerMockito.mock(FileInputStream.class);

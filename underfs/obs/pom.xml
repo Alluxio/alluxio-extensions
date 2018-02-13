@@ -18,6 +18,17 @@
   <description>Huawei OBS Under File System implementation</description>
   <version>1.8.0-SNAPSHOT</version>
 
+  <distributionManagement>
+    <snapshotRepository>
+      <id>maven.alluxio</id>
+      <url>s3://maven.alluxio/snapshot</url>
+    </snapshotRepository>
+    <repository>
+      <id>maven.alluxio</id>
+      <url>s3://maven.alluxio/release</url>
+    </repository>
+  </distributionManagement>
+
   <repositories>
     <repository>
       <id>central</id>
@@ -51,6 +62,10 @@
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
+    </repository>
+    <repository>
+      <id>maven.alluxio</id>
+      <url>s3://maven.alluxio/release</url>
     </repository>
   </repositories>
 
@@ -184,6 +199,14 @@
         </plugin>
       </plugins>
     </pluginManagement>
+
+    <extensions>
+      <extension>
+        <groupId>org.kuali.maven.wagons</groupId>
+        <artifactId>maven-s3-wagon</artifactId>
+        <version>1.2.1</version>
+      </extension>
+    </extensions>
 
     <plugins>
       <plugin>
