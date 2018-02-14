@@ -55,6 +55,9 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
   /** Bucket name of user's configured Alluxio bucket. */
   private final String mBucketName;
 
+  /** Header prefix. */
+  public static final String HEADER_OBS = "obs://";
+
   /**
    * Constructs a new instance of {@link OBSUnderFileSystem}.
    *
@@ -254,7 +257,7 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
 
   @Override
   protected String getRootKey() {
-    return Constants.HEADER_OBS + mBucketName;
+    return HEADER_OBS + mBucketName;
   }
 
   @Override

@@ -54,7 +54,7 @@ public class OBSUnderFileSystemFactory implements UnderFileSystemFactory {
 
   @Override
   public boolean supportsPath(String path) {
-    return path != null && path.startsWith(Constants.HEADER_OBS);
+    return path != null && path.startsWith(OBSUnderFileSystem.HEADER_OBS);
   }
 
   /**
