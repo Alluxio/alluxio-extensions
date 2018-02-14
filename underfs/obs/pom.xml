@@ -20,12 +20,12 @@
 
   <distributionManagement>
     <snapshotRepository>
-      <id>maven.alluxio</id>
-      <url>s3://maven.alluxio/snapshot</url>
+      <id>alluxio-extensions</id>
+      <url>s3://alluxio-extensions/snapshot</url>
     </snapshotRepository>
     <repository>
-      <id>maven.alluxio</id>
-      <url>s3://maven.alluxio/release</url>
+      <id>alluxio-extensions</id>
+      <url>s3://alluxio-extensions/release</url>
     </repository>
   </distributionManagement>
 
@@ -64,8 +64,8 @@
       </snapshots>
     </repository>
     <repository>
-      <id>maven.alluxio</id>
-      <url>s3://maven.alluxio/release</url>
+      <id>alluxio-extensions</id>
+      <url>s3://alluxio-extensions/release</url>
     </repository>
   </repositories>
 
