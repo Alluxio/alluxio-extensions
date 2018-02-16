@@ -12,8 +12,6 @@
 package alluxio.underfs.s3;
 
 import alluxio.AlluxioURI;
-import alluxio.Constants;
-import alluxio.PropertyKey;
 import alluxio.underfs.UnderFileSystem;
 import alluxio.underfs.UnderFileSystemConfiguration;
 import alluxio.underfs.UnderFileSystemFactory;
@@ -62,7 +60,7 @@ public class S3UnderFileSystemFactory implements UnderFileSystemFactory {
    * @return true if both access and secret key are present, false otherwise
    */
   private boolean checkAWSCredentials(UnderFileSystemConfiguration conf) {
-    return conf.containsKey(PropertyKey.S3N_ACCESS_KEY) && conf
-        .containsKey(PropertyKey.S3N_SECRET_KEY);
+    return conf.containsKey(S3PropertyKey.S3N_ACCESS_KEY) && conf
+        .containsKey(S3PropertyKey.S3N_SECRET_KEY);
   }
 }
