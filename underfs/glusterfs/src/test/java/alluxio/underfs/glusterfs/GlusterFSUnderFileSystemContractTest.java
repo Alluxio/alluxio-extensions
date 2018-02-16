@@ -29,10 +29,10 @@ public final class GlusterFSUnderFileSystemContractTest
   @Override
   public UnderFileSystem createUfs(String path, UnderFileSystemConfiguration conf)
       throws Exception {
-    if (StringUtils.isEmpty(conf.getValue(PropertyKey.UNDERFS_GLUSTERFS_MOUNTS))) {
+    if (StringUtils.isEmpty(conf.getValue(GlusterFSPropertyKey.UNDERFS_GLUSTERFS_MOUNTS))) {
       throw new IllegalArgumentException("Gluster FS Mounts are undefined");
     }
-    if (StringUtils.isEmpty(conf.getValue(PropertyKey.UNDERFS_GLUSTERFS_VOLUMES))) {
+    if (StringUtils.isEmpty(conf.getValue(GlusterFSPropertyKey.UNDERFS_GLUSTERFS_VOLUMES))) {
       throw new IllegalArgumentException("Gluster FS Volumes are undefined");
     }
     return new GlusterFSUnderFileSystemFactory().create(path, conf);

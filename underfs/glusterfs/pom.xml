@@ -15,7 +15,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.alluxio</groupId>
   <artifactId>alluxio-underfs-glusterfs</artifactId>
-  <version>1.6.0-SNAPSHOT</version>
+  <version>1.8.0-SNAPSHOT</version>
   <name>Alluxio Under File System - Gluster FS</name>
   <description>Gluster FS Under File System implementation</description>
 
@@ -46,7 +46,7 @@
   </repositories>
 
   <properties>
-    <alluxio.version>1.6.0-SNAPSHOT</alluxio.version>
+    <alluxio.version>1.8.0-SNAPSHOT</alluxio.version>
     <build.path>build</build.path>
     <glusterfs-hadoop.version>2.3.13</glusterfs-hadoop.version>
     <hadoop.version>2.3.0</hadoop.version>
