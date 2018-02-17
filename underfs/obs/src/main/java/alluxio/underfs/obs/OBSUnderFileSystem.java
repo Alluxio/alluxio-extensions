@@ -13,7 +13,6 @@ package alluxio.underfs.obs;
 
 import alluxio.AlluxioURI;
 import alluxio.Constants;
-import alluxio.PropertyKey;
 import alluxio.underfs.ObjectUnderFileSystem;
 import alluxio.underfs.UnderFileSystem;
 import alluxio.underfs.UnderFileSystemConfiguration;
@@ -65,17 +64,17 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
   public static OBSUnderFileSystem createInstance(AlluxioURI uri,
       UnderFileSystemConfiguration conf) throws Exception {
     Preconditions.checkArgument(
-        conf.containsKey(PropertyKey.OBS_ACCESS_KEY),
-        "Property " + PropertyKey.OBS_ACCESS_KEY + " is required to connect to OBS");
+        conf.containsKey(OBSPropertyKey.OBS_ACCESS_KEY),
+        "Property " + OBSPropertyKey.OBS_ACCESS_KEY + " is required to connect to OBS");
     Preconditions.checkArgument(
-        conf.containsKey(PropertyKey.OBS_SECRET_KEY),
-        "Property " + PropertyKey.OBS_SECRET_KEY + " is required to connect to OBS");
+        conf.containsKey(OBSPropertyKey.OBS_SECRET_KEY),
+        "Property " + OBSPropertyKey.OBS_SECRET_KEY + " is required to connect to OBS");
     Preconditions.checkArgument(
-        conf.containsKey(PropertyKey.OBS_ENDPOINT),
-        "Property " + PropertyKey.OBS_ENDPOINT + " is required to connect to OBS");
-    String accessKey = conf.getValue(PropertyKey.OBS_ACCESS_KEY);
-    String secretKey = conf.getValue(PropertyKey.OBS_SECRET_KEY);
-    String endPoint = conf.getValue(PropertyKey.OBS_ENDPOINT);
+        conf.containsKey(OBSPropertyKey.OBS_ENDPOINT),
+        "Property " + OBSPropertyKey.OBS_ENDPOINT + " is required to connect to OBS");
+    String accessKey = conf.getValue(OBSPropertyKey.OBS_ACCESS_KEY);
+    String secretKey = conf.getValue(OBSPropertyKey.OBS_SECRET_KEY);
+    String endPoint = conf.getValue(OBSPropertyKey.OBS_ENDPOINT);
     ObsClient obsClient = new ObsClient(accessKey, secretKey, endPoint);
     String bucketName = UnderFileSystemUtils.getBucketName(uri);
     return new OBSUnderFileSystem(uri, obsClient, bucketName, conf);
@@ -254,7 +253,7 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
 
   @Override
   protected String getRootKey() {
-    return Constants.HEADER_OBS + mBucketName;
+    return OBSConstants.HEADER_OBS + mBucketName;
   }
 
   @Override

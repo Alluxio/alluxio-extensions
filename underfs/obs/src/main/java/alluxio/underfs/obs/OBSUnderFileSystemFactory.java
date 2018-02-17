@@ -13,7 +13,6 @@ package alluxio.underfs.obs;
 
 import alluxio.AlluxioURI;
 import alluxio.Constants;
-import alluxio.PropertyKey;
 import alluxio.underfs.UnderFileSystem;
 import alluxio.underfs.UnderFileSystemConfiguration;
 import alluxio.underfs.UnderFileSystemFactory;
@@ -54,7 +53,7 @@ public class OBSUnderFileSystemFactory implements UnderFileSystemFactory {
 
   @Override
   public boolean supportsPath(String path) {
-    return path != null && path.startsWith(Constants.HEADER_OBS);
+    return path != null && path.startsWith(OBSConstants.HEADER_OBS);
   }
 
   /**
@@ -63,8 +62,8 @@ public class OBSUnderFileSystemFactory implements UnderFileSystemFactory {
    * @return true if access, secret and endpoint keys are present, false otherwise
    */
   private boolean checkOBSCredentials(UnderFileSystemConfiguration conf) {
-    return conf.containsKey(PropertyKey.OBS_ACCESS_KEY)
-        && conf.containsKey(PropertyKey.OBS_SECRET_KEY)
-        && conf.containsKey(PropertyKey.OBS_ENDPOINT);
+    return conf.containsKey(OBSPropertyKey.OBS_ACCESS_KEY)
+        && conf.containsKey(OBSPropertyKey.OBS_SECRET_KEY)
+        && conf.containsKey(OBSPropertyKey.OBS_ENDPOINT);
   }
 }
