@@ -90,12 +90,12 @@ public class S3UnderFileSystem extends ObjectUnderFileSystem {
   public static S3UnderFileSystem createInstance(AlluxioURI uri,
       UnderFileSystemConfiguration conf) throws ServiceException {
     String bucketName = UnderFileSystemUtils.getBucketName(uri);
-    Preconditions.checkArgument(conf.containsKey(PropertyKey.S3N_ACCESS_KEY),
-        "Property " + PropertyKey.S3N_ACCESS_KEY + " is required to connect to S3");
-    Preconditions.checkArgument(conf.containsKey(PropertyKey.S3N_SECRET_KEY),
-        "Property " + PropertyKey.S3N_SECRET_KEY + " is required to connect to S3");
-    AWSCredentials awsCredentials = new AWSCredentials(conf.getValue(PropertyKey.S3N_ACCESS_KEY),
-        conf.getValue(PropertyKey.S3N_SECRET_KEY));
+    Preconditions.checkArgument(conf.containsKey(S3PropertyKey.S3N_ACCESS_KEY),
+        "Property " + S3PropertyKey.S3N_ACCESS_KEY + " is required to connect to S3");
+    Preconditions.checkArgument(conf.containsKey(S3PropertyKey.S3N_SECRET_KEY),
+        "Property " + S3PropertyKey.S3N_SECRET_KEY + " is required to connect to S3");
+    AWSCredentials awsCredentials = new AWSCredentials(conf.getValue(S3PropertyKey.S3N_ACCESS_KEY),
+        conf.getValue(S3PropertyKey.S3N_SECRET_KEY));
 
     Jets3tProperties props = new Jets3tProperties();
     if (conf.containsKey(PropertyKey.UNDERFS_S3_PROXY_HOST)) {
@@ -105,18 +105,18 @@ public class S3UnderFileSystem extends ObjectUnderFileSystem {
       props.setProperty("httpclient.proxy-port",
           conf.getValue(PropertyKey.UNDERFS_S3_PROXY_PORT));
     }
-    if (conf.containsKey(PropertyKey.UNDERFS_S3_PROXY_HTTPS_ONLY)) {
+    if (conf.containsKey(S3PropertyKey.UNDERFS_S3_PROXY_HTTPS_ONLY)) {
       props.setProperty("s3service.https-only",
-          conf.getValue(PropertyKey.UNDERFS_S3_PROXY_HTTPS_ONLY));
+          conf.getValue(S3PropertyKey.UNDERFS_S3_PROXY_HTTPS_ONLY));
     }
     if (conf.containsKey(PropertyKey.UNDERFS_S3_ENDPOINT)) {
       props.setProperty("s3service.s3-endpoint", conf.getValue(PropertyKey.UNDERFS_S3_ENDPOINT));
-      if (conf.containsKey(PropertyKey.UNDERFS_S3_PROXY_HTTPS_ONLY)) {
+      if (conf.containsKey(S3PropertyKey.UNDERFS_S3_PROXY_HTTPS_ONLY)) {
         props.setProperty("s3service.s3-endpoint-https-port",
-            conf.getValue(PropertyKey.UNDERFS_S3_ENDPOINT_HTTPS_PORT));
+            conf.getValue(S3PropertyKey.UNDERFS_S3_ENDPOINT_HTTPS_PORT));
       } else {
         props.setProperty("s3service.s3-endpoint-http-port",
-            conf.getValue(PropertyKey.UNDERFS_S3_ENDPOINT_HTTP_PORT));
+            conf.getValue(S3PropertyKey.UNDERFS_S3_ENDPOINT_HTTP_PORT));
       }
     }
     if (conf.containsKey(PropertyKey.UNDERFS_S3_DISABLE_DNS_BUCKETS)) {
@@ -291,8 +291,8 @@ public class S3UnderFileSystem extends ObjectUnderFileSystem {
       StorageObject[] objects = mChunk.getObjects();
       ObjectStatus[] ret = new ObjectStatus[objects.length];
       for (int i = 0; i < ret.length; ++i) {
-        ret[i] = new ObjectStatus(objects[i].getKey(), objects[i].getContentLength(),
-            objects[i].getLastModifiedDate().getTime());
+        ret[i] = new ObjectStatus(objects[i].getKey(), objects[i].getETag(),
+            objects[i].getContentLength(), objects[i].getLastModifiedDate().getTime());
       }
       return ret;
     }
@@ -323,7 +323,8 @@ public class S3UnderFileSystem extends ObjectUnderFileSystem {
       if (meta == null) {
         return null;
       }
-      return new ObjectStatus(key, meta.getContentLength(), meta.getLastModifiedDate().getTime());
+      return new ObjectStatus(key, meta.getETag(), meta.getContentLength(),
+          meta.getLastModifiedDate().getTime());
     } catch (ServiceException e) {
       return null;
     }

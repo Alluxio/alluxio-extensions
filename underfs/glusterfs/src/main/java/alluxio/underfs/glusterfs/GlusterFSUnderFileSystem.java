@@ -28,6 +28,7 @@ import alluxio.underfs.options.DeleteOptions;
 import alluxio.underfs.options.FileLocationOptions;
 import alluxio.underfs.options.MkdirsOptions;
 import alluxio.underfs.options.OpenOptions;
+import alluxio.util.UnderFileSystemUtils;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
@@ -82,14 +83,14 @@ public final class GlusterFSUnderFileSystem extends BaseUnderFileSystem
   public static Configuration createConfiguration(UnderFileSystemConfiguration conf) {
     Configuration glusterFsConf = new Configuration();
     // Configure for Gluster FS
-    glusterFsConf.set("fs.glusterfs.impl", conf.getValue(PropertyKey.UNDERFS_GLUSTERFS_IMPL));
+    glusterFsConf.set("fs.glusterfs.impl", conf.getValue(GlusterFSPropertyKey.UNDERFS_GLUSTERFS_IMPL));
     glusterFsConf
-        .set("mapred.system.dir", conf.getValue(PropertyKey.UNDERFS_GLUSTERFS_MR_DIR));
+        .set("mapred.system.dir", conf.getValue(GlusterFSPropertyKey.UNDERFS_GLUSTERFS_MR_DIR));
     glusterFsConf
-        .set("fs.glusterfs.volumes", conf.getValue(PropertyKey.UNDERFS_GLUSTERFS_VOLUMES));
+        .set("fs.glusterfs.volumes", conf.getValue(GlusterFSPropertyKey.UNDERFS_GLUSTERFS_VOLUMES));
     glusterFsConf.set(
-        "fs.glusterfs.volume.fuse." + conf.getValue(PropertyKey.UNDERFS_GLUSTERFS_VOLUMES),
-        conf.getValue(PropertyKey.UNDERFS_GLUSTERFS_MOUNTS));
+        "fs.glusterfs.volume.fuse." + conf.getValue(GlusterFSPropertyKey.UNDERFS_GLUSTERFS_VOLUMES),
+        conf.getValue(GlusterFSPropertyKey.UNDERFS_GLUSTERFS_MOUNTS));
     return glusterFsConf;
   }
 
@@ -226,8 +227,10 @@ public final class GlusterFSUnderFileSystem extends BaseUnderFileSystem
   public UfsFileStatus getFileStatus(String path) throws IOException {
     Path tPath = new Path(path);
     FileStatus fs = mFileSystem.getFileStatus(tPath);
-    return new UfsFileStatus(path, fs.getLen(), fs.getModificationTime(), fs.getOwner(),
-        fs.getGroup(), fs.getPermission().toShort());
+    String contentHash =
+        UnderFileSystemUtils.approximateContentHash(fs.getLen(), fs.getModificationTime());
+    return new UfsFileStatus(path, contentHash, fs.getLen(), fs.getModificationTime(),
+        fs.getOwner(), fs.getGroup(), fs.getPermission().toShort());
   }
 
   @Override
@@ -256,6 +259,21 @@ public final class GlusterFSUnderFileSystem extends BaseUnderFileSystem
   }
 
   @Override
+  public UfsStatus getStatus(String path) throws IOException {
+    Path tPath = new Path(path);
+    FileStatus fs = mFileSystem.getFileStatus(tPath);
+    if (fs.isFile()) {
+      // Return file status.
+      String contentHash =
+          UnderFileSystemUtils.approximateContentHash(fs.getLen(), fs.getModificationTime());
+      return new UfsFileStatus(path, contentHash, fs.getLen(), fs.getModificationTime(),
+          fs.getOwner(), fs.getGroup(), fs.getPermission().toShort());
+    }
+    // Return directory status.
+    return new UfsDirectoryStatus(path, fs.getOwner(), fs.getGroup(), fs.getPermission().toShort());
+  }
+
+  @Override
   public boolean isDirectory(String path) throws IOException {
     return mFileSystem.isDirectory(new Path(path));
   }
@@ -277,7 +295,9 @@ public final class GlusterFSUnderFileSystem extends BaseUnderFileSystem
       // only return the relative path, to keep consistent with java.io.File.list()
       UfsStatus retStatus;
       if (status.isFile()) {
-        retStatus = new UfsFileStatus(status.getPath().getName(), status.getLen(),
+        String contentHash =
+            UnderFileSystemUtils.approximateContentHash(status.getLen(), status.getModificationTime());
+        retStatus = new UfsFileStatus(status.getPath().getName(), contentHash, status.getLen(),
             status.getModificationTime(), status.getOwner(), status.getGroup(),
             status.getPermission().toShort());
       } else {
