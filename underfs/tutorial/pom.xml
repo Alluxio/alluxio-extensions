@@ -16,7 +16,7 @@
   <artifactId>alluxio-underfs-dummy</artifactId>
   <name>Alluxio Under File System - Dummy for Tutorial</name>
   <description>Dummy Under File System implementation for tutorial</description>
-  <version>1.7.0-SNAPSHOT</version>
+  <version>1.8.0-RC1</version>
 
   <repositories>
     <repository>
@@ -34,7 +34,7 @@
   </repositories>
 
   <properties>
-    <alluxio.version>1.7.0-SNAPSHOT</alluxio.version>
+    <alluxio.version>1.8.0-RC1</alluxio.version>
     <java.version>1.7</java.version>
     <junit.version>4.12</junit.version>
     <maven.version>3.3.9</maven.version>
