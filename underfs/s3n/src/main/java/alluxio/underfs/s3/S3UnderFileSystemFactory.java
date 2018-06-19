@@ -56,6 +56,11 @@ public class S3UnderFileSystemFactory implements UnderFileSystemFactory {
     return path != null && path.startsWith(S3UnderFileSystem.HEADER_S3N);
   }
 
+  @Override
+  public boolean supportsPath(String path, UnderFileSystemConfiguration conf) {
+    return supportsPath(path) && checkAWSCredentials(conf);
+  }
+
   /**
    * @return true if both access and secret key are present, false otherwise
    */

@@ -39,4 +39,9 @@ public class DummyUnderFileSystemFactory implements UnderFileSystemFactory {
     }
     return path.startsWith(DummyUnderFileSystem.DUMMY_SCHEME);
   }
+
+  @Override
+  public boolean supportsPath(String path, UnderFileSystemConfiguration conf) {
+    return supportsPath(path);
+  }
 }
