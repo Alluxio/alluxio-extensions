@@ -20,14 +20,14 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public class DummyUnderFileSystemPropertyKey {
-//  public static final PropertyKey DUMMY_UFS_SUFFIX =
-//      new PropertyKey.Builder(Name.DUMMY_UFS_SUFFIX)
-//          .setDescription("All paths are mapped to $path$suffix in the local ufs.")
-//          .setDefaultValue("prefix")
-//          .build();
-//
-//  @ThreadSafe
-//  public static final class Name {
-//    public static final String DUMMY_UFS_SUFFIX = "fs.dummy.suffix";
-//  }
+  public static final PropertyKey DUMMY_UFS_SLEEP =
+      new PropertyKey.Builder(Name.DUMMY_UFS_SLEEP)
+          .setDescription("Sleep time before performing operation on local ufs.")
+          .setDefaultValue("0ms")
+          .build();
+
+  @ThreadSafe
+  public static final class Name {
+    public static final String DUMMY_UFS_SLEEP = "fs.dummy.sleep";
+  }
 }

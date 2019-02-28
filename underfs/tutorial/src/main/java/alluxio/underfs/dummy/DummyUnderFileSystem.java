@@ -25,7 +25,7 @@ import alluxio.underfs.options.DeleteOptions;
 import alluxio.underfs.options.FileLocationOptions;
 import alluxio.underfs.options.MkdirsOptions;
 import alluxio.underfs.options.OpenOptions;
-import alluxio.util.io.PathUtils;
+import alluxio.util.SleepUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,7 +58,7 @@ public class DummyUnderFileSystem extends BaseUnderFileSystem {
     super(uri, ufsConf, alluxioConf);
 
     mLocalUnderFileSystem =
-        new LocalUnderFileSystem(new AlluxioURI(mapPath(uri.getPath())), ufsConf, alluxioConf);
+        new LocalUnderFileSystem(new AlluxioURI(stripPath(uri.getPath())), ufsConf, alluxioConf);
     mConf = ufsConf;
   }
 
@@ -74,53 +74,53 @@ public class DummyUnderFileSystem extends BaseUnderFileSystem {
 
   @Override
   public OutputStream create(String path, CreateOptions options) throws IOException {
-    return mLocalUnderFileSystem.create(mapPath(path), options);
+    return mLocalUnderFileSystem.create(stripPath(path), options);
   }
 
   @Override
   public boolean deleteDirectory(String path, DeleteOptions options) throws IOException {
-    return mLocalUnderFileSystem.deleteDirectory(mapPath(path), options);
+    return mLocalUnderFileSystem.deleteDirectory(stripPath(path), options);
   }
 
   @Override
   public boolean deleteFile(String path) throws IOException {
-    return mLocalUnderFileSystem.deleteFile(mapPath(path));
+    return mLocalUnderFileSystem.deleteFile(stripPath(path));
   }
 
   @Override
   public boolean exists(String path) throws IOException {
-    return mLocalUnderFileSystem.exists(mapPath(path));
+    return mLocalUnderFileSystem.exists(stripPath(path));
   }
 
   @Override
   public long getBlockSizeByte(String path) throws IOException {
-    return mLocalUnderFileSystem.getBlockSizeByte(mapPath(path));
+    return mLocalUnderFileSystem.getBlockSizeByte(stripPath(path));
   }
 
   @Override
   public UfsDirectoryStatus getDirectoryStatus(String path) throws IOException {
-    return mLocalUnderFileSystem.getDirectoryStatus(mapPath(path));
+    return mLocalUnderFileSystem.getDirectoryStatus(stripPath(path));
   }
 
   @Override
   public List<String> getFileLocations(String path) throws IOException {
-    return mLocalUnderFileSystem.getFileLocations(mapPath(path));
+    return mLocalUnderFileSystem.getFileLocations(stripPath(path));
   }
 
   @Override
   public List<String> getFileLocations(String path, FileLocationOptions options)
       throws IOException {
-    return mLocalUnderFileSystem.getFileLocations(mapPath(path), options);
+    return mLocalUnderFileSystem.getFileLocations(stripPath(path), options);
   }
 
   @Override
   public UfsFileStatus getFileStatus(String path) throws IOException {
-    return mLocalUnderFileSystem.getFileStatus(mapPath(path));
+    return mLocalUnderFileSystem.getFileStatus(stripPath(path));
   }
 
   @Override
   public long getSpace(String path, SpaceType type) throws IOException {
-    return mLocalUnderFileSystem.getSpace(mapPath(path), type);
+    return mLocalUnderFileSystem.getSpace(stripPath(path), type);
   }
 
   @Override
@@ -130,47 +130,47 @@ public class DummyUnderFileSystem extends BaseUnderFileSystem {
 
   @Override
   public boolean isDirectory(String path) throws IOException {
-    return mLocalUnderFileSystem.isDirectory(mapPath(path));
+    return mLocalUnderFileSystem.isDirectory(stripPath(path));
   }
 
   @Override
   public boolean isFile(String path) throws IOException {
-    return mLocalUnderFileSystem.isFile(mapPath(path));
+    return mLocalUnderFileSystem.isFile(stripPath(path));
   }
 
   @Override
   public UfsStatus[] listStatus(String path) throws IOException {
-    return mLocalUnderFileSystem.listStatus(mapPath(path));
+    return mLocalUnderFileSystem.listStatus(stripPath(path));
   }
 
   @Override
   public boolean mkdirs(String path, MkdirsOptions options) throws IOException {
-    return mLocalUnderFileSystem.mkdirs(mapPath(path), options);
+    return mLocalUnderFileSystem.mkdirs(stripPath(path), options);
   }
 
   @Override
   public InputStream open(String path, OpenOptions options) throws IOException {
-    return mLocalUnderFileSystem.open(mapPath(path), options);
+    return mLocalUnderFileSystem.open(stripPath(path), options);
   }
 
   @Override
   public boolean renameDirectory(String src, String dst) throws IOException {
-    return mLocalUnderFileSystem.renameDirectory(mapPath(src), mapPath(dst));
+    return mLocalUnderFileSystem.renameDirectory(stripPath(src), stripPath(dst));
   }
 
   @Override
   public boolean renameFile(String src, String dst) throws IOException {
-    return mLocalUnderFileSystem.renameFile(mapPath(src), mapPath(dst));
+    return mLocalUnderFileSystem.renameFile(stripPath(src), stripPath(dst));
   }
 
   @Override
   public void setOwner(String path, String user, String group) throws IOException {
-    mLocalUnderFileSystem.setOwner(mapPath(path), user, group);
+    mLocalUnderFileSystem.setOwner(stripPath(path), user, group);
   }
 
   @Override
   public void setMode(String path, short mode) throws IOException {
-    mLocalUnderFileSystem.setMode(mapPath(path), mode);
+    mLocalUnderFileSystem.setMode(stripPath(path), mode);
   }
 
   @Override
@@ -192,16 +192,17 @@ public class DummyUnderFileSystem extends BaseUnderFileSystem {
   public void cleanup() {}
 
   /**
-   * Map path to ${path}${suffix} in the local ufs.
+   * Sleep and strip scheme from path.
    *
    * @param path the path to strip the scheme from
    * @return the path, with the optional scheme stripped away
    */
-  private String mapPath(String path) {
+  private String stripPath(String path) {
+    SleepUtils.sleepMs(mConf.getMs(DummyUnderFileSystemPropertyKey.DUMMY_UFS_SLEEP));
+
     if (path.startsWith(DUMMY_SCHEME)) {
       path = path.substring(DUMMY_SCHEME.length());
     }
-    //final String suffix = mConf.get(DummyUnderFileSystemPropertyKey.DUMMY_UFS_SUFFIX);
     return new AlluxioURI(path).getPath();
   }
 }
