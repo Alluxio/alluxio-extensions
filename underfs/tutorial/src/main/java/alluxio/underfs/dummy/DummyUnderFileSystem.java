@@ -12,6 +12,7 @@
 package alluxio.underfs.dummy;
 
 import alluxio.AlluxioURI;
+import alluxio.conf.AlluxioConfiguration;
 import alluxio.underfs.BaseUnderFileSystem;
 import alluxio.underfs.UfsDirectoryStatus;
 import alluxio.underfs.UfsFileStatus;
@@ -24,6 +25,10 @@ import alluxio.underfs.options.DeleteOptions;
 import alluxio.underfs.options.FileLocationOptions;
 import alluxio.underfs.options.MkdirsOptions;
 import alluxio.underfs.options.OpenOptions;
+import alluxio.util.SleepUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,6 +43,8 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public class DummyUnderFileSystem extends BaseUnderFileSystem {
+  private static final Logger LOG = LoggerFactory.getLogger(DummyUnderFileSystem.class);
+
   public static final String DUMMY_SCHEME = "dummy://";
 
   private UnderFileSystem mLocalUnderFileSystem;
@@ -48,11 +55,12 @@ public class DummyUnderFileSystem extends BaseUnderFileSystem {
    * @param uri the {@link AlluxioURI} for this UFS
    * @param ufsConf UFS configuration
    */
-  public DummyUnderFileSystem(AlluxioURI uri, UnderFileSystemConfiguration ufsConf) {
-    super(uri, ufsConf);
+  public DummyUnderFileSystem(AlluxioURI uri, UnderFileSystemConfiguration ufsConf,
+      AlluxioConfiguration alluxioConf) {
+    super(uri, ufsConf, alluxioConf);
 
     mLocalUnderFileSystem =
-        new LocalUnderFileSystem(new AlluxioURI(stripPath(uri.getPath())), ufsConf);
+        new LocalUnderFileSystem(new AlluxioURI(stripPath(uri.getPath())), ufsConf, alluxioConf);
   }
 
   @Override
@@ -181,11 +189,19 @@ public class DummyUnderFileSystem extends BaseUnderFileSystem {
     return mLocalUnderFileSystem.supportsFlush();
   }
 
+  @Override
+  public void cleanup() {}
+
   /**
+   * Sleep and strip scheme from path.
+   *
    * @param path the path to strip the scheme from
    * @return the path, with the optional scheme stripped away
    */
   private String stripPath(String path) {
+    LOG.debug("Sleeping for configured interval");
+    SleepUtils.sleepMs(mUfsConf.getMs(DummyUnderFileSystemPropertyKey.DUMMY_UFS_SLEEP));
+
     if (path.startsWith(DUMMY_SCHEME)) {
       path = path.substring(DUMMY_SCHEME.length());
     }
