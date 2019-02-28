@@ -27,6 +27,9 @@ import alluxio.underfs.options.MkdirsOptions;
 import alluxio.underfs.options.OpenOptions;
 import alluxio.util.SleepUtils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -40,12 +43,11 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public class DummyUnderFileSystem extends BaseUnderFileSystem {
+  private static final Logger LOG = LoggerFactory.getLogger(DummyUnderFileSystem.class);
+
   public static final String DUMMY_SCHEME = "dummy://";
 
   private UnderFileSystem mLocalUnderFileSystem;
-
-  /** The configuration for ufs. */
-  private final UnderFileSystemConfiguration mConf;
 
   /**
    * Constructs a new {@link DummyUnderFileSystem}.
@@ -59,7 +61,6 @@ public class DummyUnderFileSystem extends BaseUnderFileSystem {
 
     mLocalUnderFileSystem =
         new LocalUnderFileSystem(new AlluxioURI(stripPath(uri.getPath())), ufsConf, alluxioConf);
-    mConf = ufsConf;
   }
 
   @Override
@@ -198,7 +199,8 @@ public class DummyUnderFileSystem extends BaseUnderFileSystem {
    * @return the path, with the optional scheme stripped away
    */
   private String stripPath(String path) {
-    SleepUtils.sleepMs(mConf.getMs(DummyUnderFileSystemPropertyKey.DUMMY_UFS_SLEEP));
+    LOG.debug("Sleeping for configured interval");
+    SleepUtils.sleepMs(mUfsConf.getMs(DummyUnderFileSystemPropertyKey.DUMMY_UFS_SLEEP));
 
     if (path.startsWith(DUMMY_SCHEME)) {
       path = path.substring(DUMMY_SCHEME.length());
