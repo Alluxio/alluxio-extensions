@@ -26,5 +26,5 @@ mvn test -DtestTutorialUFS=dummy://<folder>
 ### Mount
 
 ```bash
-./bin/alluxio fs mount /mnt/dummy dummy://<folder>
+./bin/alluxio fs mount /mnt/dummy dummy://<folder> --option fs.dummy.prefix=hello
 ```

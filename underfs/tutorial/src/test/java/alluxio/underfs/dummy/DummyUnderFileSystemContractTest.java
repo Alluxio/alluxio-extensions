@@ -11,6 +11,8 @@
 
 package alluxio.underfs.dummy;
 
+import alluxio.ConfigurationTestUtils;
+import alluxio.conf.InstancedConfiguration;
 import alluxio.underfs.AbstractUnderFileSystemContractTest;
 import alluxio.underfs.UnderFileSystem;
 import alluxio.underfs.UnderFileSystemConfiguration;
@@ -35,7 +37,8 @@ public final class DummyUnderFileSystemContractTest extends AbstractUnderFileSys
   @Override
   public UnderFileSystem createUfs(String path, UnderFileSystemConfiguration conf)
       throws Exception {
-    return new DummyUnderFileSystemFactory().create(path, conf);
+    return new DummyUnderFileSystemFactory().create(path, conf,
+        new InstancedConfiguration(ConfigurationTestUtils.defaults()));
   }
 
   @Override

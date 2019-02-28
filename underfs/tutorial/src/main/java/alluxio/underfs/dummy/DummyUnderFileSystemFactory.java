@@ -12,6 +12,7 @@
 package alluxio.underfs.dummy;
 
 import alluxio.AlluxioURI;
+import alluxio.conf.AlluxioConfiguration;
 import alluxio.underfs.UnderFileSystem;
 import alluxio.underfs.UnderFileSystemConfiguration;
 import alluxio.underfs.UnderFileSystemFactory;
@@ -27,9 +28,9 @@ import javax.annotation.concurrent.ThreadSafe;
 public class DummyUnderFileSystemFactory implements UnderFileSystemFactory {
 
   @Override
-  public UnderFileSystem create(String path, UnderFileSystemConfiguration conf) {
+  public UnderFileSystem create(String path, UnderFileSystemConfiguration conf, AlluxioConfiguration alluxioConf) {
     Preconditions.checkArgument(path != null, "path may not be null");
-    return new DummyUnderFileSystem(new AlluxioURI(path), conf);
+    return new DummyUnderFileSystem(new AlluxioURI(path), conf, alluxioConf);
   }
 
   @Override
