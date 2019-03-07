@@ -13,6 +13,8 @@ package alluxio.underfs.obs;
 
 import alluxio.AlluxioURI;
 import alluxio.Constants;
+import alluxio.conf.AlluxioConfiguration;
+import alluxio.conf.PropertyKey;
 import alluxio.underfs.ObjectUnderFileSystem;
 import alluxio.underfs.UnderFileSystem;
 import alluxio.underfs.UnderFileSystemConfiguration;
@@ -39,7 +41,7 @@ import java.util.List;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * Aliyun OSS {@link UnderFileSystem} implementation.
+ * Huawei OBS {@link UnderFileSystem} implementation.
  */
 @ThreadSafe
 public class OBSUnderFileSystem extends ObjectUnderFileSystem {
@@ -62,22 +64,20 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
    * @return the created {@link OBSUnderFileSystem} instance
    */
   public static OBSUnderFileSystem createInstance(AlluxioURI uri,
-      UnderFileSystemConfiguration conf) throws Exception {
-    Preconditions.checkArgument(
-        conf.containsKey(OBSPropertyKey.OBS_ACCESS_KEY),
-        "Property " + OBSPropertyKey.OBS_ACCESS_KEY + " is required to connect to OBS");
-    Preconditions.checkArgument(
-        conf.containsKey(OBSPropertyKey.OBS_SECRET_KEY),
-        "Property " + OBSPropertyKey.OBS_SECRET_KEY + " is required to connect to OBS");
-    Preconditions.checkArgument(
-        conf.containsKey(OBSPropertyKey.OBS_ENDPOINT),
-        "Property " + OBSPropertyKey.OBS_ENDPOINT + " is required to connect to OBS");
-    String accessKey = conf.getValue(OBSPropertyKey.OBS_ACCESS_KEY);
-    String secretKey = conf.getValue(OBSPropertyKey.OBS_SECRET_KEY);
-    String endPoint = conf.getValue(OBSPropertyKey.OBS_ENDPOINT);
+      UnderFileSystemConfiguration conf, AlluxioConfiguration alluxioConf) throws Exception {
+    Preconditions.checkArgument(conf.isSet(OBSPropertyKey.OBS_ACCESS_KEY),
+        "Property %s is required to connect to OBS", OBSPropertyKey.OBS_ACCESS_KEY);
+    Preconditions.checkArgument(conf.isSet(OBSPropertyKey.OBS_SECRET_KEY),
+        "Property %s is required to connect to OBS", OBSPropertyKey.OBS_SECRET_KEY);
+    Preconditions.checkArgument(conf.isSet(OBSPropertyKey.OBS_ENDPOINT),
+        "Property %s is required to connect to OBS", OBSPropertyKey.OBS_ENDPOINT);
+    String accessKey = conf.get(OBSPropertyKey.OBS_ACCESS_KEY);
+    String secretKey = conf.get(OBSPropertyKey.OBS_SECRET_KEY);
+    String endPoint = conf.get(OBSPropertyKey.OBS_ENDPOINT);
+
     ObsClient obsClient = new ObsClient(accessKey, secretKey, endPoint);
     String bucketName = UnderFileSystemUtils.getBucketName(uri);
-    return new OBSUnderFileSystem(uri, obsClient, bucketName, conf);
+    return new OBSUnderFileSystem(uri, obsClient, bucketName, conf, alluxioConf);
   }
 
   /**
@@ -89,11 +89,14 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
    * @param conf configuration for this UFS
    */
   protected OBSUnderFileSystem(AlluxioURI uri, ObsClient obsClient, String bucketName,
-                               UnderFileSystemConfiguration conf) {
-    super(uri, conf);
+      UnderFileSystemConfiguration ufsConf, AlluxioConfiguration alluxioConf) {
+    super(uri, ufsConf, alluxioConf);
     mClient = obsClient;
     mBucketName = bucketName;
   }
+
+  @Override
+  public void cleanup() {}
 
   @Override
   public String getUnderFSType() {
@@ -135,7 +138,8 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
 
   @Override
   protected OutputStream createObject(String key) throws IOException {
-    return new OBSOutputStream(mBucketName, key, mClient);
+    return new OBSOutputStream(mBucketName, key, mClient,
+        mAlluxioConf.getList(PropertyKey.TMP_DIRS, ","));
   }
 
   @Override
@@ -163,7 +167,7 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
     key = key.equals(PATH_SEPARATOR) ? "" : key;
     ListObjectsRequest request = new ListObjectsRequest(mBucketName);
     request.setPrefix(key);
-    request.setMaxKeys(getListingChunkLength());
+    request.setMaxKeys(getListingChunkLength(mAlluxioConf));
     request.setDelimiter(delimiter);
 
     ObjectListing result = getObjectListingChunk(request);

@@ -49,9 +49,11 @@ public class OBSInputStream extends MultiRangeObjectInputStream {
    * @param bucketName the name of the bucket
    * @param key the key of the file
    * @param client the client for OSS
+   * @param multiRangeChunkSize the chunk size to use on this stream
    */
-  OBSInputStream(String bucketName, String key, ObsClient client) throws IOException {
-    this(bucketName, key, client, 0L);
+  OBSInputStream(String bucketName, String key, ObsClient client, long multiRangeChunkSize)
+      throws IOException {
+    this(bucketName, key, client, 0L, multiRangeChunkSize);
   }
 
   /**
@@ -61,9 +63,11 @@ public class OBSInputStream extends MultiRangeObjectInputStream {
    * @param key the key of the file
    * @param client the OBS client
    * @param position the position to begin reading from
+   * @param multiRangeChunkSize the chunk size to use on this stream
    */
-  OBSInputStream(String bucketName, String key, ObsClient client, long position)
-      throws IOException {
+  OBSInputStream(String bucketName, String key, ObsClient client, long position,
+      long multiRangeChunkSize) throws IOException {
+    super(multiRangeChunkSize);
     mBucketName = bucketName;
     mKey = key;
     mObsClient = client;

@@ -11,7 +11,7 @@
 
 package alluxio.underfs.obs;
 
-import alluxio.PropertyKey;
+import alluxio.conf.PropertyKey;
 
 import javax.annotation.concurrent.ThreadSafe;
 
