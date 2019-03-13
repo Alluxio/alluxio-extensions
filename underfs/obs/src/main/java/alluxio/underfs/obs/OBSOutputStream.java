@@ -69,6 +69,7 @@ public final class OBSOutputStream extends OutputStream {
    * @param bucketName the name of the bucket
    * @param key the key of the file
    * @param client the OBS client
+   * @param tmpDirs a list of temporary directories
    */
   public OBSOutputStream(String bucketName, String key, ObsClient client, List<String> tmpDirs) throws IOException {
     Preconditions.checkArgument(bucketName != null && !bucketName.isEmpty(),
@@ -163,6 +164,5 @@ public final class OBSOutputStream extends OutputStream {
       LOG.error("Failed to upload {}. Temporary file @ {}", mKey, mFile.getPath());
       throw new IOException(e);
     }
-    mFile.delete();
   }
 }
