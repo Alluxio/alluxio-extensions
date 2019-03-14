@@ -12,8 +12,10 @@
 package alluxio.underfs.obs;
 
 import alluxio.AlluxioURI;
+import alluxio.conf.InstancedConfiguration;
 import alluxio.underfs.UnderFileSystemConfiguration;
 import alluxio.underfs.options.DeleteOptions;
+import alluxio.util.ConfigurationUtils;
 
 import com.obs.services.ObsClient;
 import com.obs.services.exception.ObsException;
@@ -48,7 +50,8 @@ public class OBSUnderFileSystemTest {
     mClient = Mockito.mock(ObsClient.class);
 
     mOBSUnderFileSystem = new OBSUnderFileSystem(new AlluxioURI(""), mClient, BUCKET_NAME,
-        UnderFileSystemConfiguration.defaults());
+        UnderFileSystemConfiguration.defaults(),
+        new InstancedConfiguration(ConfigurationUtils.defaults()));
   }
 
   /**

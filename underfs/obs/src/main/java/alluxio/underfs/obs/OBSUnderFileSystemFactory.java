@@ -12,7 +12,7 @@
 package alluxio.underfs.obs;
 
 import alluxio.AlluxioURI;
-import alluxio.Constants;
+import alluxio.conf.AlluxioConfiguration;
 import alluxio.underfs.UnderFileSystem;
 import alluxio.underfs.UnderFileSystemConfiguration;
 import alluxio.underfs.UnderFileSystemFactory;
@@ -36,12 +36,13 @@ public class OBSUnderFileSystemFactory implements UnderFileSystemFactory {
   public OBSUnderFileSystemFactory() {}
 
   @Override
-  public UnderFileSystem create(String path, UnderFileSystemConfiguration conf) {
+  public UnderFileSystem create(String path, UnderFileSystemConfiguration conf,
+      AlluxioConfiguration alluxioConf) {
     Preconditions.checkNotNull(path, "path");
 
     if (checkOBSCredentials(conf)) {
       try {
-        return OBSUnderFileSystem.createInstance(new AlluxioURI(path), conf);
+        return OBSUnderFileSystem.createInstance(new AlluxioURI(path), conf, alluxioConf);
       } catch (Exception e) {
         throw Throwables.propagate(e);
       }
@@ -62,8 +63,8 @@ public class OBSUnderFileSystemFactory implements UnderFileSystemFactory {
    * @return true if access, secret and endpoint keys are present, false otherwise
    */
   private boolean checkOBSCredentials(UnderFileSystemConfiguration conf) {
-    return conf.containsKey(OBSPropertyKey.OBS_ACCESS_KEY)
-        && conf.containsKey(OBSPropertyKey.OBS_SECRET_KEY)
-        && conf.containsKey(OBSPropertyKey.OBS_ENDPOINT);
+    return conf.isSet(OBSPropertyKey.OBS_ACCESS_KEY)
+        && conf.isSet(OBSPropertyKey.OBS_SECRET_KEY)
+        && conf.isSet(OBSPropertyKey.OBS_ENDPOINT);
   }
 }

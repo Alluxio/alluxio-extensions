@@ -11,6 +11,9 @@
 
 package alluxio.underfs.obs;
 
+import alluxio.util.CommonUtils;
+import alluxio.util.io.PathUtils;
+
 import com.google.common.base.Preconditions;
 import com.obs.services.ObsClient;
 import com.obs.services.exception.ObsException;
@@ -29,6 +32,8 @@ import java.io.OutputStream;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.concurrent.NotThreadSafe;
@@ -64,8 +69,10 @@ public final class OBSOutputStream extends OutputStream {
    * @param bucketName the name of the bucket
    * @param key the key of the file
    * @param client the OBS client
+   * @param tmpDirs a list of temporary directories
    */
-  public OBSOutputStream(String bucketName, String key, ObsClient client) throws IOException {
+  public OBSOutputStream(String bucketName, String key, ObsClient client,
+      List<String> tmpDirs) throws IOException {
     Preconditions.checkArgument(bucketName != null && !bucketName.isEmpty(),
         "Bucket name must not be null or empty.");
     Preconditions.checkArgument(key != null && !key.isEmpty(),
@@ -75,7 +82,7 @@ public final class OBSOutputStream extends OutputStream {
     mKey = key;
     mObsClient = client;
 
-    mFile = File.createTempFile("alluxio-obs", ".tmp");
+    mFile = new File(PathUtils.concatPath(CommonUtils.getTmpDir(tmpDirs), UUID.randomUUID()));
 
     try {
       mHash = MessageDigest.getInstance("MD5");

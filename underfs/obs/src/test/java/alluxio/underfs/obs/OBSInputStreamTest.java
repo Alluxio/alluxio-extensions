@@ -11,6 +11,19 @@
 
 package alluxio.underfs.obs;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
+import alluxio.conf.AlluxioConfiguration;
+import alluxio.conf.InstancedConfiguration;
+import alluxio.conf.PropertyKey;
+import alluxio.util.ConfigurationUtils;
+
 import com.obs.services.ObsClient;
 import com.obs.services.model.GetObjectRequest;
 import com.obs.services.model.S3Object;
@@ -25,14 +38,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
-
 /**
  * Unit tests for the {@link OBSInputStream}.
  */
@@ -40,6 +45,8 @@ public class OBSInputStreamTest {
 
   private static final String BUCKET_NAME = "testBucket";
   private static final String OBJECT_KEY = "testObjectKey";
+  private static AlluxioConfiguration sConf =
+      new InstancedConfiguration(ConfigurationUtils.defaults());
 
   private OBSInputStream mOBSInputStream;
   private ObsClient mObsClient;
@@ -75,7 +82,8 @@ public class OBSInputStreamTest {
       mInputStreamSpy[i] = spy(new ByteArrayInputStream(mockInput));
       when(mObjects[i].getObjectContent()).thenReturn(mInputStreamSpy[i]);
     }
-    mOBSInputStream = new OBSInputStream(BUCKET_NAME, OBJECT_KEY, mObsClient);
+    mOBSInputStream = new OBSInputStream(BUCKET_NAME, OBJECT_KEY, mObsClient,
+        sConf.getBytes(PropertyKey.UNDERFS_OBJECT_STORE_MULTI_RANGE_CHUNK_SIZE));
   }
 
   @Test
@@ -108,5 +116,4 @@ public class OBSInputStreamTest {
     mOBSInputStream.skip(1);
     assertEquals(3, mOBSInputStream.read());
   }
-
 }
