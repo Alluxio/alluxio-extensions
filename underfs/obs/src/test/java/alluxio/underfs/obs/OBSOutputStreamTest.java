@@ -44,11 +44,12 @@ import java.security.DigestOutputStream;
  */
 @RunWith(PowerMockRunner.class)
 public class OBSOutputStreamTest {
+  private static AlluxioConfiguration sConf =
+      new InstancedConfiguration(ConfigurationUtils.defaults());
+
   private ObsClient mObsClient;
   private File mFile;
   private BufferedOutputStream mLocalOutputStream;
-  private static AlluxioConfiguration sConf =
-      new InstancedConfiguration(ConfigurationUtils.defaults());
 
   /**
    * The exception expected to be thrown.
