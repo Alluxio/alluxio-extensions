@@ -11,8 +11,10 @@
 
 package alluxio.underfs.obs;
 
+import alluxio.conf.InstancedConfiguration;
 import alluxio.underfs.UnderFileSystemFactory;
 import alluxio.underfs.UnderFileSystemFactoryRegistry;
+import alluxio.util.ConfigurationUtils;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,7 +29,8 @@ public class OBSUnderFileSystemFactoryTest {
    */
   @Test
   public void factory() {
-    UnderFileSystemFactory factory = UnderFileSystemFactoryRegistry.find("obs://bucket/key");
+    UnderFileSystemFactory factory = UnderFileSystemFactoryRegistry.find("obs://bucket/key",
+        new InstancedConfiguration(ConfigurationUtils.defaults()));
 
     Assert.assertNotNull(
         "A UnderFileSystemFactory should exist for obs paths when using this module", factory);

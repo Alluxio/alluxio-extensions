@@ -61,6 +61,7 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
    *
    * @param uri the {@link AlluxioURI} for this UFS
    * @param conf the configuration for this UFS
+   * @param alluxioConf Alluxio configuration
    * @return the created {@link OBSUnderFileSystem} instance
    */
   public static OBSUnderFileSystem createInstance(AlluxioURI uri,
@@ -225,6 +226,7 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
     @Override
     public ObjectListingChunk getNextChunk() throws IOException {
       if (mResult.isTruncated()) {
+        mRequest.setMarker(mResult.getNextMarker());
         ObjectListing nextResult = mClient.listObjects(mRequest);
         if (nextResult != null) {
           return new OBSObjectListingChunk(mRequest, nextResult);
@@ -263,7 +265,8 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
   @Override
   protected InputStream openObject(String key, OpenOptions options) throws IOException {
     try {
-      return new OBSInputStream(mBucketName, key, mClient, options.getOffset());
+      return new OBSInputStream(mBucketName, key, mClient, options.getOffset(),
+          mAlluxioConf.getBytes(PropertyKey.UNDERFS_OBJECT_STORE_MULTI_RANGE_CHUNK_SIZE));
     } catch (ObsException e) {
       throw new IOException(e.getMessage());
     }

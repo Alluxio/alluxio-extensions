@@ -71,7 +71,8 @@ public final class OBSOutputStream extends OutputStream {
    * @param client the OBS client
    * @param tmpDirs a list of temporary directories
    */
-  public OBSOutputStream(String bucketName, String key, ObsClient client, List<String> tmpDirs) throws IOException {
+  public OBSOutputStream(String bucketName, String key, ObsClient client,
+      List<String> tmpDirs) throws IOException {
     Preconditions.checkArgument(bucketName != null && !bucketName.isEmpty(),
         "Bucket name must not be null or empty.");
     Preconditions.checkArgument(key != null && !key.isEmpty(),

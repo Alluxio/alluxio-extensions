@@ -35,7 +35,7 @@ public final class OBSUnderFileSystemContractTest extends AbstractUnderFileSyste
   @Override
   public UnderFileSystem createUfs(String path, UnderFileSystemConfiguration conf)
       throws Exception {
-    return new OBSUnderFileSystemFactory().create(path, conf);
+    return new OBSUnderFileSystemFactory().create(path, conf, mConfiguration);
   }
 
   @Override

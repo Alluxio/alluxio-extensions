@@ -20,7 +20,7 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public final class OBSPropertyKey {
-    public static final PropertyKey OBS_ACCESS_KEY = new PropertyKey.Builder(Name.OBS_ACCESS_KEY)
+  public static final PropertyKey OBS_ACCESS_KEY = new PropertyKey.Builder(Name.OBS_ACCESS_KEY)
       .setDescription("The access key of OBS bucket.").build();
   public static final PropertyKey OBS_ENDPOINT = new PropertyKey.Builder(Name.OBS_ENDPOINT)
       .setDefaultValue("obs.myhwclouds.com")
@@ -28,6 +28,9 @@ public final class OBSPropertyKey {
   public static final PropertyKey OBS_SECRET_KEY = new PropertyKey.Builder(Name.OBS_SECRET_KEY)
       .setDescription("The secret key of OBS bucket.").build();
 
+  /**
+   * Name for OBS configuration property keys.
+   */
   @ThreadSafe
   public static final class Name {
     public static final String OBS_ACCESS_KEY = "fs.obs.accessKey";
