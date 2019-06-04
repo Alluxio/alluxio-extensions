@@ -19,6 +19,7 @@ import com.obs.services.exception.ObsException;
 import com.obs.services.model.GetObjectRequest;
 import com.obs.services.model.ObjectMetadata;
 import com.obs.services.model.S3Object;
+import org.apache.commons.httpclient.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,9 +102,10 @@ public class OBSInputStream extends MultiRangeObjectInputStream {
         S3Object obj = mObsClient.getObject(req);
         return new BufferedInputStream(obj.getObjectContent());
       } catch (ObsException e) {
+        System.out.println(e.getResponseCode());
         LOG.warn("Attempt {} to open key {} in bucket {} failed with exception : {}",
             mRetryPolicy.getAttemptCount(), mKey, mBucketName, e.toString());
-        if (!e.getErrorCode().equals("NoSuchKey")) {
+        if (e.getResponseCode() != HttpStatus.SC_NOT_FOUND) {
           throw new IOException(e);
         }
         // Key does not exist
