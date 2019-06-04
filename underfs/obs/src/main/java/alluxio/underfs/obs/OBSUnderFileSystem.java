@@ -13,8 +13,8 @@ package alluxio.underfs.obs;
 
 import alluxio.AlluxioURI;
 import alluxio.Constants;
-import alluxio.conf.AlluxioConfiguration;
 import alluxio.conf.PropertyKey;
+import alluxio.retry.RetryPolicy;
 import alluxio.underfs.ObjectUnderFileSystem;
 import alluxio.underfs.UnderFileSystem;
 import alluxio.underfs.UnderFileSystemConfiguration;
@@ -48,7 +48,7 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
   private static final Logger LOG = LoggerFactory.getLogger(OBSUnderFileSystem.class);
 
   /** Suffix for an empty file to flag it as a directory. */
-  private static final String FOLDER_SUFFIX = PATH_SEPARATOR;
+  private static final String FOLDER_SUFFIX = "_$folder$";
 
   /** Huawei OBS client. */
   private final ObsClient mClient;
@@ -61,11 +61,10 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
    *
    * @param uri the {@link AlluxioURI} for this UFS
    * @param conf the configuration for this UFS
-   * @param alluxioConf Alluxio configuration
    * @return the created {@link OBSUnderFileSystem} instance
    */
   public static OBSUnderFileSystem createInstance(AlluxioURI uri,
-      UnderFileSystemConfiguration conf, AlluxioConfiguration alluxioConf) throws Exception {
+      UnderFileSystemConfiguration conf) throws Exception {
     Preconditions.checkArgument(conf.isSet(OBSPropertyKey.OBS_ACCESS_KEY),
         "Property %s is required to connect to OBS", OBSPropertyKey.OBS_ACCESS_KEY);
     Preconditions.checkArgument(conf.isSet(OBSPropertyKey.OBS_SECRET_KEY),
@@ -78,7 +77,7 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
 
     ObsClient obsClient = new ObsClient(accessKey, secretKey, endPoint);
     String bucketName = UnderFileSystemUtils.getBucketName(uri);
-    return new OBSUnderFileSystem(uri, obsClient, bucketName, conf, alluxioConf);
+    return new OBSUnderFileSystem(uri, obsClient, bucketName, conf);
   }
 
   /**
@@ -90,8 +89,8 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
    * @param conf configuration for this UFS
    */
   protected OBSUnderFileSystem(AlluxioURI uri, ObsClient obsClient, String bucketName,
-      UnderFileSystemConfiguration ufsConf, AlluxioConfiguration alluxioConf) {
-    super(uri, ufsConf, alluxioConf);
+      UnderFileSystemConfiguration conf) {
+    super(uri, conf);
     mClient = obsClient;
     mBucketName = bucketName;
   }
@@ -125,7 +124,7 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
   }
 
   @Override
-  protected boolean createEmptyObject(String key) {
+  public boolean createEmptyObject(String key) {
     try {
       ObjectMetadata objMeta = new ObjectMetadata();
       objMeta.setContentLength(0L);
@@ -140,7 +139,7 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
   @Override
   protected OutputStream createObject(String key) throws IOException {
     return new OBSOutputStream(mBucketName, key, mClient,
-        mAlluxioConf.getList(PropertyKey.TMP_DIRS, ","));
+        mUfsConf.getList(PropertyKey.TMP_DIRS, ","));
   }
 
   @Override
@@ -168,7 +167,7 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
     key = key.equals(PATH_SEPARATOR) ? "" : key;
     ListObjectsRequest request = new ListObjectsRequest(mBucketName);
     request.setPrefix(key);
-    request.setMaxKeys(getListingChunkLength(mAlluxioConf));
+    request.setMaxKeys(getListingChunkLength(mUfsConf));
     request.setDelimiter(delimiter);
 
     ObjectListing result = getObjectListingChunk(request);
@@ -263,10 +262,10 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
   }
 
   @Override
-  protected InputStream openObject(String key, OpenOptions options) throws IOException {
+  protected InputStream openObject(String key, OpenOptions options, RetryPolicy retryPolicy) throws IOException {
     try {
-      return new OBSInputStream(mBucketName, key, mClient, options.getOffset(),
-          mAlluxioConf.getBytes(PropertyKey.UNDERFS_OBJECT_STORE_MULTI_RANGE_CHUNK_SIZE));
+      return new OBSInputStream(mBucketName, key, mClient, options.getOffset(), retryPolicy,
+          mUfsConf.getBytes(PropertyKey.UNDERFS_OBJECT_STORE_MULTI_RANGE_CHUNK_SIZE));
     } catch (ObsException e) {
       throw new IOException(e.getMessage());
     }

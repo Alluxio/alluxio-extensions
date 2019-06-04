@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 import alluxio.conf.AlluxioConfiguration;
 import alluxio.conf.InstancedConfiguration;
 import alluxio.conf.PropertyKey;
+import alluxio.retry.CountingRetry;
 import alluxio.util.ConfigurationUtils;
 
 import com.obs.services.ObsClient;
@@ -82,7 +83,7 @@ public class OBSInputStreamTest {
       mInputStreamSpy[i] = spy(new ByteArrayInputStream(mockInput));
       when(mObjects[i].getObjectContent()).thenReturn(mInputStreamSpy[i]);
     }
-    mOBSInputStream = new OBSInputStream(BUCKET_NAME, OBJECT_KEY, mObsClient,
+    mOBSInputStream = new OBSInputStream(BUCKET_NAME, OBJECT_KEY, mObsClient, new CountingRetry(1),
         sConf.getBytes(PropertyKey.UNDERFS_OBJECT_STORE_MULTI_RANGE_CHUNK_SIZE));
   }
 

@@ -12,7 +12,6 @@
 package alluxio.underfs.obs;
 
 import alluxio.AlluxioURI;
-import alluxio.conf.AlluxioConfiguration;
 import alluxio.underfs.UnderFileSystem;
 import alluxio.underfs.UnderFileSystemConfiguration;
 import alluxio.underfs.UnderFileSystemFactory;
@@ -36,13 +35,12 @@ public class OBSUnderFileSystemFactory implements UnderFileSystemFactory {
   public OBSUnderFileSystemFactory() {}
 
   @Override
-  public UnderFileSystem create(String path, UnderFileSystemConfiguration conf,
-      AlluxioConfiguration alluxioConf) {
+  public UnderFileSystem create(String path, UnderFileSystemConfiguration conf) {
     Preconditions.checkNotNull(path, "path");
 
     if (checkOBSCredentials(conf)) {
       try {
-        return OBSUnderFileSystem.createInstance(new AlluxioURI(path), conf, alluxioConf);
+        return OBSUnderFileSystem.createInstance(new AlluxioURI(path), conf);
       } catch (Exception e) {
         throw Throwables.propagate(e);
       }
