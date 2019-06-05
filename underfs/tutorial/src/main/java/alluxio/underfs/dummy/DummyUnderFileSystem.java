@@ -12,8 +12,7 @@
 package alluxio.underfs.dummy;
 
 import alluxio.AlluxioURI;
-import alluxio.conf.AlluxioConfiguration;
-import alluxio.underfs.BaseUnderFileSystem;
+import alluxio.underfs.ConsistentUnderFileSystem;
 import alluxio.underfs.UfsDirectoryStatus;
 import alluxio.underfs.UfsFileStatus;
 import alluxio.underfs.UfsStatus;
@@ -42,7 +41,7 @@ import javax.annotation.concurrent.ThreadSafe;
  * {@link LocalUnderFileSystem}.
  */
 @ThreadSafe
-public class DummyUnderFileSystem extends BaseUnderFileSystem {
+public class DummyUnderFileSystem extends ConsistentUnderFileSystem {
   private static final Logger LOG = LoggerFactory.getLogger(DummyUnderFileSystem.class);
 
   public static final String DUMMY_SCHEME = "dummy://";
@@ -53,14 +52,13 @@ public class DummyUnderFileSystem extends BaseUnderFileSystem {
    * Constructs a new {@link DummyUnderFileSystem}.
    *
    * @param uri the {@link AlluxioURI} for this UFS
-   * @param ufsConf UFS configuration
+   * @param conf UFS configuration
    */
-  public DummyUnderFileSystem(AlluxioURI uri, UnderFileSystemConfiguration ufsConf,
-      AlluxioConfiguration alluxioConf) {
-    super(uri, ufsConf, alluxioConf);
+  public DummyUnderFileSystem(AlluxioURI uri, UnderFileSystemConfiguration conf) {
+    super(uri, conf);
 
     mLocalUnderFileSystem =
-        new LocalUnderFileSystem(new AlluxioURI(stripPath(uri.getPath())), ufsConf, alluxioConf);
+        new LocalUnderFileSystem(new AlluxioURI(stripPath(uri.getPath())), conf);
   }
 
   @Override
@@ -185,7 +183,7 @@ public class DummyUnderFileSystem extends BaseUnderFileSystem {
   }
 
   @Override
-  public boolean supportsFlush() {
+  public boolean supportsFlush() throws IOException {
     return mLocalUnderFileSystem.supportsFlush();
   }
 
