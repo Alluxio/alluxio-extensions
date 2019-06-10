@@ -139,28 +139,6 @@
     </dependency>
   </dependencies>
 
-  <profiles>
-    <profile>
-      <id>ufsContractTest</id>
-      <activation>
-        <property>
-          <name>testOBSBucket</name>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <configuration>
-              <testExcludes combine.self="override" />
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
-
   <build>
     <pluginManagement>
       <plugins>
@@ -176,10 +154,6 @@
             <compilerArgs>
               <arg>-Xlint:none</arg>
             </compilerArgs>
-            <testExcludes>
-              <!-- Skip UFS contract tests unless -DtestOBSBucket="obs://bucketName/testDir" is specified -->
-              <exclude>**/OBSUnderFileSystemContractTest.java</exclude>
-            </testExcludes>
           </configuration>
         </plugin>
       </plugins>

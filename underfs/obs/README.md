@@ -13,19 +13,18 @@ After configuring your maven to be able to access Huawei Cloud's maven repositor
 mvn package -DskipTests
 ```
 
-### Run Under Storage Contract Tests
-
-Note: The following runs a test to verify that the under storage satisfies the contract with Alluxio.
-Without the option `testOBSBucket` only unit tests are triggered.
-
-```bash
-mvn test -DtestOBSBucket=obs://<bucket>
-```
-
 ### Deploy
 
 ```bash
-/bin/alluxio extensions install <path>/<to>/alluxio-extensions/underfs/obs/target/alluxio-underfs-obs-<version>.jar
+./bin/alluxio extensions install <path>/<to>/alluxio-extensions/underfs/obs/target/alluxio-underfs-obs-<version>.jar
+```
+
+### Run Under Storage Contract Tests
+
+The following runs tests to verify that the under storage satisfies the contract with Alluxio.
+
+```bash
+./bin/alluxio runUfsTests --path obs://<bucket> -Dfs.obs.accessKey=<access_key> -Dfs.obs.secretKey=<secret_key> -Dfs.obs.endpoint=<endpoint>
 ```
 
 ### Mount
