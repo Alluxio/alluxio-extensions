@@ -16,7 +16,7 @@ mvn package -DskipTests
 ### Deploy
 
 ```bash
-/bin/alluxio extensions install <path>/<to>/alluxio-extensions/underfs/obs/target/alluxio-underfs-obs-<version>.jar
+./bin/alluxio extensions install <path>/<to>/alluxio-extensions/underfs/obs/target/alluxio-underfs-obs-<version>.jar
 ```
 
 ### Run Under Storage Contract Tests
