@@ -16,7 +16,7 @@
   <artifactId>alluxio-underfs-gsg</artifactId>
   <name>Alluxio Under File System - GSG</name>
   <description>Google cloud storage implementation</description>
-  <version>1.8.1</version>
+  <version>1.8.2-SNAPSHOT</version>
 
   <repositories>
     <repository>
@@ -45,7 +45,7 @@
   </repositories>
 
   <properties>
-    <alluxio.version>1.8.1</alluxio.version>
+    <alluxio.version>1.8.2-SNAPSHOT</alluxio.version>
     <hamcrest.version>1.3</hamcrest.version>
     <java.version>1.8</java.version>
     <junit.version>4.12</junit.version>
