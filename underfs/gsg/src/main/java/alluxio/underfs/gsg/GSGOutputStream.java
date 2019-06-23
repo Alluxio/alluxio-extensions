@@ -11,9 +11,6 @@
 
 package alluxio.underfs.gsg;
 
-import alluxio.util.CommonUtils;
-import alluxio.util.io.PathUtils;
-
 import com.google.cloud.WriteChannel;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
@@ -52,6 +49,9 @@ public final class GSGOutputStream extends OutputStream {
   /** The pre-allocated buffer for single byte write operation. */
   private final ByteBuffer mSingleByteBuffer;
 
+  /** The blob information of the key. */
+  private final BlobInfo mBlobInfo;
+
   /** The write channel of Google storage object. */
   private WriteChannel mWriteChannel;
 
@@ -72,6 +72,7 @@ public final class GSGOutputStream extends OutputStream {
     mKey = key;
     mClient = client;
     mSingleByteBuffer = ByteBuffer.allocate(1);
+    mBlobInfo = BlobInfo.newBuilder(BlobId.of(mBucketName, mKey)).build();
   }
 
   @Override
@@ -108,11 +109,15 @@ public final class GSGOutputStream extends OutputStream {
     if (mClosed.getAndSet(true)) {
       return;
     }
-    if (mWriteChannel == null) {
-      createWriteChannel();
-    }
     try {
-      mWriteChannel.close();
+      if (mWriteChannel != null) {
+        mWriteChannel.close();
+      } else {
+        Blob blob = mClient.create(mBlobInfo);
+        if (blob == null) {
+          throw new IOException(String.format("Failed to create empty object %s in %s", mKey, mBucketName));
+        }
+      }
     } catch (ClosedChannelException e) {
       LOG.error("Channel already closed, possible duplicate close call.", e.toString());
     } catch (IOException e) {
@@ -122,10 +127,8 @@ public final class GSGOutputStream extends OutputStream {
   }
 
   private void createWriteChannel() throws IOException {
-    BlobId id = BlobId.of(mBucketName, mKey);
-    BlobInfo info = BlobInfo.newBuilder(id).build();
     try {
-      mWriteChannel = mClient.writer(info);
+      mWriteChannel = mClient.writer(mBlobInfo);
     } catch (StorageException e) {
       throw new IOException(String.format("Failed to create write channel of %s in %s", mKey, mBucketName), e);
     }

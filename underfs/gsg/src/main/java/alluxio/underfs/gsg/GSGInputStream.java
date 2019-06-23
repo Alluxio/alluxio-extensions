@@ -79,6 +79,8 @@ public final class GSGInputStream extends InputStream {
     int num = mReadChannel.read(mSingleByteBuffer);
     if (num != -1) { // valid data read
       mPos++;
+    } else {
+      return -1;
     }
     mSingleByteBuffer.position(0);
     return mSingleByteBuffer.get() & 0xff;
@@ -117,8 +119,12 @@ public final class GSGInputStream extends InputStream {
     if (n <= 0) {
       return 0;
     }
-    mReadChannel.seek(mPos + n);
     mPos += n;
+    if (mReadChannel == null) {
+      openStream();
+    } else {
+      mReadChannel.seek(mPos);
+    }
     return n;
   }
 
