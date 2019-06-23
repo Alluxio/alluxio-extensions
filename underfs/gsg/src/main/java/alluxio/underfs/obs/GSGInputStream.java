@@ -15,8 +15,6 @@ import com.google.cloud.ReadChannel;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,8 +29,6 @@ import javax.annotation.concurrent.NotThreadSafe;
  */
 @NotThreadSafe
 public final class GSGInputStream extends InputStream {
-  private static final Logger LOG = LoggerFactory.getLogger(GSGInputStream.class);
-
   /** Bucket name of the Alluxio GSG bucket. */
   private final String mBucketName;
 
@@ -42,13 +38,14 @@ public final class GSGInputStream extends InputStream {
   /** The Google cloud storage client. */
   private final Storage mClient;
 
+  /** The pre-allocated buffer for single byte read operation. */
+  private final ByteBuffer mSingleByteBuffer;
+
   /** The underlying input stream. */
   private ReadChannel mReadChannel;
 
   /** Position of the stream. */
   private long mPos;
-
-  private BlobId mBlobId;
 
   /**
    * Creates a new instance of {@link GSGInputStream}, at a specific position.
@@ -63,7 +60,7 @@ public final class GSGInputStream extends InputStream {
     mKey = key;
     mClient = client;
     mPos = pos;
-    mBlobId = BlobId.of(mBucketName, mKey);
+    mSingleByteBuffer = ByteBuffer.allocate(1);
   }
 
   @Override
@@ -76,13 +73,13 @@ public final class GSGInputStream extends InputStream {
     if (mReadChannel == null) {
       openStream();
     }
-    ByteBuffer bytes = ByteBuffer.allocate(1);
-    int num = mReadChannel.read(bytes);
+    mSingleByteBuffer.clear();
+    int num = mReadChannel.read(mSingleByteBuffer);
     if (num != -1) { // valid data read
       mPos++;
     }
-    bytes.position(0);
-    return bytes.get() & 0xff;
+    mSingleByteBuffer.position(0);
+    return mSingleByteBuffer.get() & 0xff;
   }
 
   @Override
@@ -98,13 +95,10 @@ public final class GSGInputStream extends InputStream {
     if (mReadChannel == null) {
       openStream();
     }
-    ByteBuffer bytes = ByteBuffer.allocate(b.length);
-    int ret = mReadChannel.read(bytes);
+    int ret = mReadChannel.read(ByteBuffer.wrap(b, off, len));
     if (ret != -1) {
       mPos += ret;
     }
-    bytes.position(0);
-    bytes.get(b, off, len);
     return ret;
   }
 
@@ -131,16 +125,16 @@ public final class GSGInputStream extends InputStream {
    */
   private void openStream() throws IOException {
     try {
-      mReadChannel = mClient.reader(mBlobId);
+      mReadChannel = mClient.reader(BlobId.of(mBucketName, mKey));
       if (mReadChannel != null) {
         if (mPos > 0) {
           mReadChannel.seek(mPos);
         }
       } else {
-        LOG.error("Failed to open stream of {} in {}", mKey, mBucketName);
+        throw new IOException(String.format("Failed to open stream of %s in %s", mKey, mBucketName));
       }
     } catch (StorageException e) {
-      LOG.error("Failed to open stream of {} in {}", mKey, mBucketName, e);
+      throw new IOException(String.format("Failed to open stream of %s in %s", mKey, mBucketName), e);
     }
   }
 }

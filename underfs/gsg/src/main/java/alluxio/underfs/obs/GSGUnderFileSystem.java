@@ -22,6 +22,7 @@ import alluxio.underfs.options.OpenOptions;
 import alluxio.util.UnderFileSystemUtils;
 import alluxio.util.io.PathUtils;
 
+import com.google.api.client.util.Base64;
 import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.Blob;
@@ -53,6 +54,9 @@ import javax.annotation.concurrent.ThreadSafe;
 public class GSGUnderFileSystem extends ObjectUnderFileSystem {
   // TODO(lu) StorageException has isRetryable() method, can help handle retry
   private static final Logger LOG = LoggerFactory.getLogger(GSGUnderFileSystem.class);
+
+  /** Static hash for a directory's empty contents. */
+  private static final String DIR_HASH = Base64.encodeBase64String(new byte[0]);
 
   /** Google cloud storage client. */
   private final Storage mStorageClient;
@@ -195,9 +199,15 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
     key = PathUtils.normalizePath(key, PATH_SEPARATOR);
     // In case key is root (empty string) do not normalize prefix
     key = key.equals(PATH_SEPARATOR) ? "" : key;
-    Page<Blob> blobPages = getObjectListingChunk(key);
-    if (blobPages != null && blobPages.getValues().iterator().hasNext()) {
-      return new GSGObjectListingChunk(blobPages, Pattern.compile("^" + key + "([^/]+)/?$"), recursive);
+    Page<Blob> blobPage;
+    if (recursive) {
+      blobPage = mBucketClient.list(Storage.BlobListOption.prefix(key));
+    } else {
+      blobPage = mBucketClient.list(Storage.BlobListOption.prefix(key),
+          Storage.BlobListOption.currentDirectory());
+    }
+    if (blobPage != null && blobPage.getValues().iterator().hasNext()) {
+      return new GCSObjectListingChunk(blobPage);
     }
     return null;
   }
@@ -213,24 +223,18 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
   }
 
   /**
-   * Wrapper over GSG blob pages.
+   * Wrapper over GCS.
    */
-  private final class GSGObjectListingChunk implements ObjectListingChunk {
+  private final class GCSObjectListingChunk implements ObjectListingChunk {
     final Page<Blob> mBlobPage;
-    final Pattern mPattern;
-    final boolean mRecursive;
 
     /**
-     * Creates an instance of {@link GSGObjectListingChunk}.
+     * Creates an instance of {@link GCSObjectListingChunk}.
      *
      * @param blobPages blob pages
-     * @param pattern the pattern that describe the intermediate children with the prefix
-     * @param recursive whether list objects recursively
      */
-    GSGObjectListingChunk(Page<Blob> blobPages, Pattern pattern, boolean recursive) {
+    GCSObjectListingChunk(Page<Blob> blobPages) {
       mBlobPage = blobPages;
-      mPattern = pattern;
-      mRecursive = recursive;
     }
 
     @Override
@@ -238,14 +242,15 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
       Iterator<Blob> blobs = mBlobPage.getValues().iterator();
       List<Blob> blobList = new ArrayList<>();
       while (blobs.hasNext()) {
-        Blob blob = blobs.next();
-        if (mRecursive || mPattern.matcher(blob.getName()).matches()) {
-          blobList.add(blob);
-        }
+        blobList.add(blobs.next());
       }
-      return blobList.stream()
-          .map(b -> new ObjectStatus(b.getName(), b.getMd5(), b.getSize(), b.getUpdateTime()))
-          .toArray(ObjectStatus[]::new);
+      ObjectStatus[] res = new ObjectStatus[blobList.size()];
+      for (int i = 0; i < res.length; i++) {
+        Blob blob = blobList.get(i);
+        res[i] = new ObjectStatus(blob.getName(), blob.getMd5() == null? DIR_HASH : blob.getMd5(),
+            blob.getSize(), blob.getUpdateTime() == null ? blob.getCreateTime() : blob.getUpdateTime());
+      }
+      return res;
     }
 
     @Override
@@ -256,7 +261,7 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
     @Override
     public ObjectListingChunk getNextChunk() {
       if (mBlobPage.hasNextPage()) {
-        return new GSGObjectListingChunk(mBlobPage.getNextPage(), mPattern, mRecursive);
+        return new GCSObjectListingChunk(mBlobPage.getNextPage());
       }
       return null;
     }

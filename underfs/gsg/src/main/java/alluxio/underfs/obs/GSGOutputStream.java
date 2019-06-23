@@ -14,21 +14,20 @@ package alluxio.underfs.gsg;
 import alluxio.util.CommonUtils;
 import alluxio.util.io.PathUtils;
 
+import com.google.cloud.WriteChannel;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageException;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.util.UUID;
+import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.concurrent.NotThreadSafe;
@@ -47,14 +46,14 @@ public final class GSGOutputStream extends OutputStream {
   /** Key of the file when it is uploaded to GSG. */
   private final String mKey;
 
-  /** The local file that will be uploaded when the stream is closed. */
-  private final File mFile;
-
   /** The Google cloud storage client. */
   private final Storage mClient;
 
-  /** The output stream to a local file where the file will be buffered until closed. */
-  private OutputStream mLocalOutputStream;
+  /** The pre-allocated buffer for single byte write operation. */
+  private final ByteBuffer mSingleByteBuffer;
+
+  /** The write channel of Google storage object. */
+  private WriteChannel mWriteChannel;
 
   /** Flag to indicate this stream has been closed, to ensure close is only done once. */
   private AtomicBoolean mClosed = new AtomicBoolean(false);
@@ -72,28 +71,36 @@ public final class GSGOutputStream extends OutputStream {
     mBucketName = bucketName;
     mKey = key;
     mClient = client;
-    mFile = new File(PathUtils.concatPath(CommonUtils.getTmpDir(), UUID.randomUUID()));
-    mLocalOutputStream = new BufferedOutputStream(new FileOutputStream(mFile));
+    mSingleByteBuffer = ByteBuffer.allocate(1);
   }
 
   @Override
   public void write(int b) throws IOException {
-    mLocalOutputStream.write(b);
+    if (mWriteChannel == null) {
+      createWriteChannel();
+    }
+    mSingleByteBuffer.clear();
+    mSingleByteBuffer.putInt(b);
+    mWriteChannel.write(mSingleByteBuffer);
   }
 
   @Override
   public void write(byte[] b) throws IOException {
-    mLocalOutputStream.write(b, 0, b.length);
+    write(b, 0, b.length);
   }
 
   @Override
   public void write(byte[] b, int off, int len) throws IOException {
-    mLocalOutputStream.write(b, off, len);
+    if (mWriteChannel == null) {
+      createWriteChannel();
+    }
+    ByteBuffer buffer = ByteBuffer.wrap(b, off, len);
+    mWriteChannel.write(buffer);
   }
 
   @Override
   public void flush() throws IOException {
-    mLocalOutputStream.flush();
+    // Google storage write channel do not support flush
   }
 
   @Override
@@ -101,21 +108,26 @@ public final class GSGOutputStream extends OutputStream {
     if (mClosed.getAndSet(true)) {
       return;
     }
-    mLocalOutputStream.close();
+    if (mWriteChannel == null) {
+      createWriteChannel();
+    }
     try {
-      BlobId id = BlobId.of(mBucketName, mKey);
-      BlobInfo info = BlobInfo.newBuilder(id).build();
-      Blob blob = mClient.create(info, Files.readAllBytes(mFile.toPath()));
-      if (blob == null) {
-        throw new IOException(String.format("Failed to upload file %s to %s", mKey, mBucketName));
-      }
-    } catch (Exception e) {
+      mWriteChannel.close();
+    } catch (ClosedChannelException e) {
+      LOG.error("Channel already closed, possible duplicate close call.", e.toString());
+    } catch (IOException e) {
       LOG.error("Failed to upload {} to {}: {}", mKey, mBucketName, e.toString());
-      throw new IOException(e);
-    } finally {
-      if (!mFile.delete()) {
-        LOG.error("Failed to delete temporary file @ {}", mFile.getPath());
-      }
+      throw e;
+    }
+  }
+
+  private void createWriteChannel() throws IOException {
+    BlobId id = BlobId.of(mBucketName, mKey);
+    BlobInfo info = BlobInfo.newBuilder(id).build();
+    try {
+      mWriteChannel = mClient.writer(info);
+    } catch (StorageException e) {
+      throw new IOException(String.format("Failed to create write channel of %s in %s", mKey, mBucketName), e);
     }
   }
 }
