@@ -65,7 +65,9 @@ public final class GSGInputStream extends InputStream {
 
   @Override
   public void close() throws IOException {
-    mReadChannel.close();
+    if (mReadChannel != null) {
+      mReadChannel.close();
+    }
   }
 
   @Override
