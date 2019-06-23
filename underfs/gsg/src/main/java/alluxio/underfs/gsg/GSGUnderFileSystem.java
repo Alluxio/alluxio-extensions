@@ -28,11 +28,11 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
 import com.google.common.collect.Lists;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,16 +56,13 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
   private static final Logger LOG = LoggerFactory.getLogger(GSGUnderFileSystem.class);
 
   /** Static hash for a directory's empty contents. */
-  private static final String DIR_HASH = Base64.encodeBase64String(new byte[0]);
+  private static final String DIR_HASH = Base64.encodeBase64String(DigestUtils.md5(new byte[0]));
 
   /** Google cloud storage client. */
   private final Storage mStorageClient;
 
   /** Suffix for an empty file to flag it as a directory. */
   private static final String FOLDER_SUFFIX = "/";
-
-  /** Google cloud storage bucket client. */
-  private final Bucket mBucketClient;
 
   /** Bucket name of user's configured Alluxio bucket. */
   private final String mBucketName;
@@ -98,8 +95,7 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
     }
 
     Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
-    Bucket bucket = storage.get(bucketName);
-    return new GSGUnderFileSystem(uri, storage, bucket, bucketName,
+    return new GSGUnderFileSystem(uri, storage, bucketName,
         conf);
   }
 
@@ -108,15 +104,13 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
    *
    * @param uri the {@link AlluxioURI} for this UFS
    * @param storageClient the Google cloud storage client
-   * @param bucketClient the Google cloud storage bucket client
    * @param bucketName bucket name of user's configured Alluxio bucket
    * @param conf configuration for this UFS
    */
-  protected GSGUnderFileSystem(AlluxioURI uri, Storage storageClient, Bucket bucketClient,
+  protected GSGUnderFileSystem(AlluxioURI uri, Storage storageClient,
       String bucketName, UnderFileSystemConfiguration conf) {
     super(uri, conf);
     mStorageClient = storageClient;
-    mBucketClient = bucketClient;
     mBucketName = bucketName;
   }
 
@@ -200,26 +194,21 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
     // In case key is root (empty string) do not normalize prefix
     key = key.equals(PATH_SEPARATOR) ? "" : key;
     Page<Blob> blobPage;
-    if (recursive) {
-      blobPage = mBucketClient.list(Storage.BlobListOption.prefix(key));
-    } else {
-      blobPage = mBucketClient.list(Storage.BlobListOption.prefix(key),
-          Storage.BlobListOption.currentDirectory());
+    try {
+      if (recursive) {
+        blobPage = mStorageClient.list(mBucketName, Storage.BlobListOption.prefix(key));
+      } else {
+        blobPage = mStorageClient.list(mBucketName, Storage.BlobListOption.prefix(key),
+            Storage.BlobListOption.currentDirectory());
+      }
+    } catch (StorageException e) {
+      LOG.error("Failed to get object listing result of {}: {}", key, e.toString());
+      throw new IOException(e);
     }
     if (blobPage != null && blobPage.getValues().iterator().hasNext()) {
       return new GCSObjectListingChunk(blobPage);
     }
     return null;
-  }
-
-  // Get next chunk of listing result.
-  private Page<Blob> getObjectListingChunk(String key) throws IOException {
-    try {
-      return mBucketClient.list(Storage.BlobListOption.prefix(key));
-    } catch (StorageException e) {
-      LOG.error("Failed to get object listing result of {}: {}", key, e.toString());
-      throw new IOException(e);
-    }
   }
 
   /**
@@ -231,10 +220,10 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
     /**
      * Creates an instance of {@link GCSObjectListingChunk}.
      *
-     * @param blobPages blob pages
+     * @param blobPage blob page
      */
-    GCSObjectListingChunk(Page<Blob> blobPages) {
-      mBlobPage = blobPages;
+    GCSObjectListingChunk(Page<Blob> blobPage) {
+      mBlobPage = blobPage;
     }
 
     @Override
@@ -247,8 +236,7 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
       ObjectStatus[] res = new ObjectStatus[blobList.size()];
       for (int i = 0; i < res.length; i++) {
         Blob blob = blobList.get(i);
-        res[i] = new ObjectStatus(blob.getName(), blob.getMd5() == null? DIR_HASH : blob.getMd5(),
-            blob.getSize(), blob.getUpdateTime() == null ? blob.getCreateTime() : blob.getUpdateTime());
+        res[i] = getBlobStatus(blob);
       }
       return res;
     }
@@ -276,8 +264,7 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
         // file not found, possible for exists calls
         return null;
       }
-      return new ObjectStatus(key, blob.getMd5(), blob.getSize(),
-          blob.getUpdateTime());
+      return getBlobStatus(blob);
     } catch (StorageException e) {
       if (e.getCode() == 404) { // file not found, possible for exists calls
         return null;
@@ -300,5 +287,18 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
   @Override
   protected InputStream openObject(String key, OpenOptions options) {
     return new GSGInputStream(mBucketName, key, mStorageClient, options.getOffset());
+  }
+
+  /**
+   * Gets the blob status
+   *
+   * @param blob the blob to get status from
+   * @return the blob status
+   */
+  private ObjectStatus getBlobStatus(Blob blob) {
+    long time = blob.getUpdateTime() != null ? blob.getUpdateTime()
+        : blob.getCreateTime() != null ? blob.getCreateTime() : -1;
+    return new ObjectStatus(blob.getName(), blob.getMd5() == null? DIR_HASH : blob.getMd5(),
+        blob.getSize(), time);
   }
 }
