@@ -81,18 +81,14 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
     String bucketName = UnderFileSystemUtils.getBucketName(uri);
     GoogleCredentials credentials;
     if (conf.containsKey(GSGPropertyKey.GSG_CREDENTIAL_PATH)) {
-      LOG.info("Create GSGUnderFileSystem with UnderFileSystemConfiguration");
+      LOG.info("Create GSGUnderFileSystem with {} property key", GSGPropertyKey.GSG_CREDENTIAL_PATH.getName());
       credentials = GoogleCredentials
           .fromStream(new FileInputStream(conf.getValue(GSGPropertyKey.GSG_CREDENTIAL_PATH)))
           .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"));
-    } else if (Configuration.isSet(GSGPropertyKey.GSG_CREDENTIAL_PATH)) {
-      LOG.info("Create GSGUnderFileSystem with Alluxio configuration");
-      credentials = GoogleCredentials
-          .fromStream(new FileInputStream(Configuration.get(GSGPropertyKey.GSG_CREDENTIAL_PATH)))
-          .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"));
     } else {
-      LOG.info("Using Google application default credentials");
+      LOG.info("Create GSGUnderFileSystem with Google application default credentials");
       // The environment variable GOOGLE_APPLICATION_CREDENTIALS is set
+      // or the application is running in Google App enginee or compute enginee
       credentials = GoogleCredentials.getApplicationDefault();
     }
 
