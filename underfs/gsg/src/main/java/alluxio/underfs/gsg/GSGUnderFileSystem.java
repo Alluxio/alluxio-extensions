@@ -81,15 +81,16 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
     String bucketName = UnderFileSystemUtils.getBucketName(uri);
     GoogleCredentials credentials;
     if (conf.containsKey(GSGPropertyKey.GSG_CREDENTIAL_PATH)) {
-      LOG.info("Create GSGUnderFileSystem with {} property key", GSGPropertyKey.GSG_CREDENTIAL_PATH.getName());
+      String credsPath = conf.getValue(GSGPropertyKey.GSG_CREDENTIAL_PATH);
       credentials = GoogleCredentials
-          .fromStream(new FileInputStream(conf.getValue(GSGPropertyKey.GSG_CREDENTIAL_PATH)))
+          .fromStream(new FileInputStream(credsPath))
           .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"));
+      LOG.info("Created GSGUnderFileSystem with credentials in {}", credsPath);
     } else {
-      LOG.info("Create GSGUnderFileSystem with Google application default credentials");
       // The environment variable GOOGLE_APPLICATION_CREDENTIALS is set
-      // or the application is running in Google App enginee or compute enginee
+      // or the application is running in Google App engine or compute engine
       credentials = GoogleCredentials.getApplicationDefault();
+      LOG.info("Created GSGUnderFileSystem with default Google application credentials");
     }
 
     Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
@@ -300,7 +301,7 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
         blob.getSize(), time);
   }
 
-  // To avoid version conflicts
+  // TODO(lu) remove this temporary function later
   private static Mode getUMask(String confUmask) {
     int umask = Constants.DEFAULT_FILE_SYSTEM_UMASK;
     if (confUmask != null) {
