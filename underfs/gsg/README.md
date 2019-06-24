@@ -27,6 +27,8 @@ Under Alluxio home directory, install the built GSG jar by running:
 Integrate GSG and Alluxio requires `fs.gsg.credential.path` property 
 which points to the JSON file path of your Google application credentials.
 
+The default mode is `0700`, users can modify the mode by changing the value of `fs.gsg.default.mode`.
+
 ```bash
 ./bin/alluxio fs mount --option fs.gsg.credential.path=<path>/<to>/<your-google-credentials.json> /mnt/gsg gsg://<bucket>
 ```
