@@ -24,8 +24,14 @@ public final class GSGPropertyKey {
       .setDescription("The json file path of Google application credentials.")
       .build();
 
+  public static final PropertyKey GSG_DEFAULT_MODE = new PropertyKey.Builder(Name.GSG_DEFAULT_MODE)
+      .setDefaultValue("0700")
+      .setDescription("Mode (in octal notation) for GCG objects.")
+      .build();
+
   @ThreadSafe
   public static final class Name {
     public static final String GSG_CREDENTIAL_PATH = "fs.gsg.credential.path";
+    public static final String GSG_DEFAULT_MODE = "fs.gsg.default.mode";
   }
 }

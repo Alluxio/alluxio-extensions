@@ -15,6 +15,8 @@ import alluxio.AlluxioURI;
 import alluxio.Configuration;
 import alluxio.Constants;
 import alluxio.PropertyKey;
+import alluxio.exception.ExceptionMessage;
+import alluxio.security.authorization.Mode;
 import alluxio.underfs.ObjectUnderFileSystem;
 import alluxio.underfs.UnderFileSystem;
 import alluxio.underfs.UnderFileSystemConfiguration;
@@ -79,19 +81,16 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
     String bucketName = UnderFileSystemUtils.getBucketName(uri);
     GoogleCredentials credentials;
     if (conf.containsKey(GSGPropertyKey.GSG_CREDENTIAL_PATH)) {
-      LOG.info("Create GSGUnderFileSystem with UnderFileSystemConfiguration conf");
+      String credsPath = conf.getValue(GSGPropertyKey.GSG_CREDENTIAL_PATH);
       credentials = GoogleCredentials
-          .fromStream(new FileInputStream(conf.getValue(GSGPropertyKey.GSG_CREDENTIAL_PATH)))
+          .fromStream(new FileInputStream(credsPath))
           .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"));
-    } else if (Configuration.isSet(GSGPropertyKey.GSG_CREDENTIAL_PATH)) {
-      LOG.info("Create GSGUnderFileSystem with Alluxio configuration");
-      credentials = GoogleCredentials
-          .fromStream(new FileInputStream(Configuration.get(GSGPropertyKey.GSG_CREDENTIAL_PATH)))
-          .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"));
+      LOG.info("Created GSGUnderFileSystem with credentials in {}", credsPath);
     } else {
-      LOG.info("Using Google application default credentials");
       // The environment variable GOOGLE_APPLICATION_CREDENTIALS is set
+      // or the application is running in Google App engine or compute engine
       credentials = GoogleCredentials.getApplicationDefault();
+      LOG.info("Created GSGUnderFileSystem with default Google application credentials");
     }
 
     Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
@@ -276,7 +275,7 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
   @Override
   protected ObjectPermissions getPermissions() {
     // TODO(lu) inherit acl
-    return new ObjectPermissions("", "", Constants.DEFAULT_FILE_SYSTEM_MODE);
+    return new ObjectPermissions("", "", getUMask(mUfsConf.getValue(GSGPropertyKey.GSG_DEFAULT_MODE)).toShort());
   }
 
   @Override
@@ -300,5 +299,32 @@ public class GSGUnderFileSystem extends ObjectUnderFileSystem {
         : blob.getCreateTime() != null ? blob.getCreateTime() : -1;
     return new ObjectStatus(blob.getName(), blob.getMd5() == null? DIR_HASH : blob.getMd5(),
         blob.getSize(), time);
+  }
+
+  // TODO(lu) remove this temporary function later
+  private static Mode getUMask(String confUmask) {
+    int umask = Constants.DEFAULT_FILE_SYSTEM_UMASK;
+    if (confUmask != null) {
+      if ((confUmask.length() > 4) || !isValid(confUmask)) {
+        throw new IllegalArgumentException(ExceptionMessage.INVALID_CONFIGURATION_VALUE
+            .getMessage(confUmask, PropertyKey.SECURITY_AUTHORIZATION_PERMISSION_UMASK));
+      }
+      int newUmask = 0;
+      int lastIndex = confUmask.length() - 1;
+      for (int i = 0; i <= lastIndex; i++) {
+        newUmask += (confUmask.charAt(i) - '0') << 3 * (lastIndex - i);
+      }
+      umask = newUmask;
+    }
+    return new Mode((short) umask);
+  }
+
+  private static boolean isValid(String value) {
+    try {
+      Integer.parseInt(value);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
   }
 }
