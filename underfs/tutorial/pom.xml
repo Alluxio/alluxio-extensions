@@ -36,7 +36,7 @@
   <properties>
     <alluxio.version>2.0.0-SNAPSHOT</alluxio.version>
     <java.version>1.8</java.version>
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13.1</junit.version>
     <maven.version>3.3.9</maven.version>
   </properties>
 
