@@ -48,7 +48,7 @@
     <alluxio.version>1.8.1</alluxio.version>
     <hamcrest.version>1.3</hamcrest.version>
     <java.version>1.8</java.version>
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13.1</junit.version>
     <maven.version>3.3.9</maven.version>
     <mockito.version>1.10.8</mockito.version>
     <obs.version>2.1.18</obs.version>
