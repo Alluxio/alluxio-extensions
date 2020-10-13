@@ -48,7 +48,7 @@
     <alluxio.version>1.8.0</alluxio.version>
     <build.path>build</build.path>
     <java.version>1.8</java.version>
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13.1</junit.version>
     <sshj.version>0.23.0</sshj.version>
     <cglib.version>3.2.5</cglib.version>
     <mockito.version>1.10.8</mockito.version>
