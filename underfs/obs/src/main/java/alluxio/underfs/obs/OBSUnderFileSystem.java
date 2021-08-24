@@ -28,7 +28,7 @@ import com.obs.services.exception.ObsException;
 import com.obs.services.model.ListObjectsRequest;
 import com.obs.services.model.ObjectListing;
 import com.obs.services.model.ObjectMetadata;
-import com.obs.services.model.S3Object;
+import com.obs.services.model.ObsObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +56,8 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
   /** Bucket name of user's configured Alluxio bucket. */
   private final String mBucketName;
 
+  private final String mBucketType;
+
   /**
    * Constructs a new instance of {@link OBSUnderFileSystem}.
    *
@@ -74,10 +76,11 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
     String accessKey = conf.get(OBSPropertyKey.OBS_ACCESS_KEY);
     String secretKey = conf.get(OBSPropertyKey.OBS_SECRET_KEY);
     String endPoint = conf.get(OBSPropertyKey.OBS_ENDPOINT);
+    String bucketType = conf.get(OBSPropertyKey.OBS_BUCKET_TYPE);
 
     ObsClient obsClient = new ObsClient(accessKey, secretKey, endPoint);
     String bucketName = UnderFileSystemUtils.getBucketName(uri);
-    return new OBSUnderFileSystem(uri, obsClient, bucketName, conf);
+    return new OBSUnderFileSystem(uri, obsClient, bucketName, bucketType, conf);
   }
 
   /**
@@ -88,11 +91,12 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
    * @param bucketName bucket name of user's configured Alluxio bucket
    * @param conf configuration for this UFS
    */
-  protected OBSUnderFileSystem(AlluxioURI uri, ObsClient obsClient, String bucketName,
+  protected OBSUnderFileSystem(AlluxioURI uri, ObsClient obsClient, String bucketName, String bucketType,
       UnderFileSystemConfiguration conf) {
     super(uri, conf);
     mClient = obsClient;
     mBucketName = bucketName;
+    mBucketType = bucketType;
   }
 
   @Override
@@ -189,6 +193,14 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
     return result;
   }
 
+  private boolean isDirectoryInPFS(ObjectMetadata meta) {
+    int mode = Integer.parseInt(meta.getMetadata().get("mode").toString());
+    if (mode < 0)
+      return false;
+    int ifDIr = 0x004000;
+    return (ifDIr & mode) != 0;
+  }
+
   /**
    * Customized {@link ObjectListingChunk}.
    */
@@ -206,10 +218,10 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
 
     @Override
     public ObjectStatus[] getObjectStatuses() {
-      List<S3Object> objects = mResult.getObjectSummaries();
+      List<ObsObject> objects = mResult.getObjects();
       ObjectStatus[] ret = new ObjectStatus[objects.size()];
       int i = 0;
-      for (S3Object obj : objects) {
+      for (ObsObject obj : objects) {
         ret[i++] = new ObjectStatus(obj.getObjectKey(), obj.getMetadata().getEtag(),
             obj.getMetadata().getContentLength(), obj.getMetadata().getLastModified().getTime());
       }
@@ -240,6 +252,12 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
     try {
       ObjectMetadata meta = mClient.getObjectMetadata(mBucketName, key);
       if (meta == null) {
+        return null;
+      }
+      if (mBucketType.equalsIgnoreCase("pfs") &&
+              isDirectoryInPFS(meta)) {
+        // Directory in PFS will be explicitly created and has object meta,
+        // which is different from the normal object storage.
         return null;
       }
       return new ObjectStatus(key, meta.getEtag(), meta.getContentLength(),

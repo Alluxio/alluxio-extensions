@@ -18,7 +18,7 @@ import com.obs.services.ObsClient;
 import com.obs.services.exception.ObsException;
 import com.obs.services.model.GetObjectRequest;
 import com.obs.services.model.ObjectMetadata;
-import com.obs.services.model.S3Object;
+import com.obs.services.model.ObsObject;
 import org.apache.commons.httpclient.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +99,7 @@ public class OBSInputStream extends MultiRangeObjectInputStream {
     ObsException lastException = null;
     while (mRetryPolicy.attempt()) {
       try {
-        S3Object obj = mObsClient.getObject(req);
+        ObsObject obj = mObsClient.getObject(req);
         return new BufferedInputStream(obj.getObjectContent());
       } catch (ObsException e) {
         System.out.println(e.getResponseCode());

@@ -27,7 +27,7 @@ import alluxio.util.ConfigurationUtils;
 
 import com.obs.services.ObsClient;
 import com.obs.services.model.GetObjectRequest;
-import com.obs.services.model.S3Object;
+import com.obs.services.model.ObsObject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,7 +52,7 @@ public class OBSInputStreamTest {
   private OBSInputStream mOBSInputStream;
   private ObsClient mObsClient;
   private InputStream[] mInputStreamSpy;
-  private S3Object[] mObjects;
+  private ObsObject[] mObjects;
 
   /**
    * The exception expected to be thrown.
@@ -65,11 +65,11 @@ public class OBSInputStreamTest {
     mObsClient = mock(ObsClient.class);
 
     byte[] input = new byte[] {1, 2, 3};
-    mObjects = new S3Object[input.length];
+    mObjects = new ObsObject[input.length];
     mInputStreamSpy = new InputStream[input.length];
     for (int i = 0; i < input.length; ++i) {
       final long pos = (long) i;
-      mObjects[i] = mock(S3Object.class);
+      mObjects[i] = mock(ObsObject.class);
       when(mObsClient.getObject(argThat(new ArgumentMatcher<GetObjectRequest>() {
         @Override
         public boolean matches(Object argument) {

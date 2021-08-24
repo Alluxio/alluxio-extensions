@@ -27,7 +27,9 @@ public final class OBSPropertyKey {
       .setDescription("The endpoint of OBS bucket.").build();
   public static final PropertyKey OBS_SECRET_KEY = new PropertyKey.Builder(Name.OBS_SECRET_KEY)
       .setDescription("The secret key of OBS bucket.").build();
-
+  public static final PropertyKey OBS_BUCKET_TYPE = new PropertyKey.Builder(Name.OBS_BUCKET_TYPE)
+          .setDefaultValue("obs")
+          .setDescription("The type of bucket (obs/pfs),the default value is obs.").build();
   /**
    * Name for OBS configuration property keys.
    */
@@ -36,5 +38,6 @@ public final class OBSPropertyKey {
     public static final String OBS_ACCESS_KEY = "fs.obs.accessKey";
     public static final String OBS_ENDPOINT = "fs.obs.endpoint";
     public static final String OBS_SECRET_KEY = "fs.obs.secretKey";
+    public static final String OBS_BUCKET_TYPE = "fs.obs.bucketType";
   }
 }
