@@ -29,6 +29,8 @@ import com.obs.services.model.ListObjectsRequest;
 import com.obs.services.model.ObjectListing;
 import com.obs.services.model.ObjectMetadata;
 import com.obs.services.model.ObsObject;
+import com.obs.services.model.fs.RenameRequest;
+import com.obs.services.model.fs.RenameResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -186,8 +188,12 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
     ObjectListing result;
     try {
       result = mClient.listObjects(request);
-    } catch (ObsException e) {
-      LOG.error("Failed to list path {}", request.getPrefix(), e);
+      if (isEnvironmentPFS() && result.getObjects().size() == 0
+              && !isDirectory(request.getPrefix())) {
+        result = null;
+      }
+    } catch (IOException e) {
+      LOG.warn("Failed to list path {}", request.getPrefix(), e);
       result = null;
     }
     return result;
@@ -199,6 +205,10 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
       return false;
     int ifDIr = 0x004000;
     return (ifDIr & mode) != 0;
+  }
+
+  private boolean isEnvironmentPFS() {
+    return mBucketType.equalsIgnoreCase("pfs");
   }
 
   /**
@@ -254,17 +264,46 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
       if (meta == null) {
         return null;
       }
-      if (mBucketType.equalsIgnoreCase("pfs") &&
-              isDirectoryInPFS(meta)) {
-        // Directory in PFS will be explicitly created and has object meta,
-        // which is different from the normal object storage.
-        return null;
+      if (isEnvironmentPFS()) {
+        /**
+         * When in PFS environment:
+         * 1. Directory will be explicitly created and have object meta.
+         * 2. File will have object meta even if there is `/` at the end of the file name (e.g. `/dir1/file1/`)
+         * However we should return null meta here.
+         */
+        if (isDirectoryInPFS(meta)) {
+          return null;
+        }
+        if (!isDirectoryInPFS(meta) && key.endsWith(PATH_SEPARATOR)) {
+          return null;
+        }
       }
       return new ObjectStatus(key, meta.getEtag(), meta.getContentLength(),
           meta.getLastModified().getTime());
     } catch (ObsException e) {
       LOG.warn("Failed to get Object {}, return null", key, e);
       return null;
+    }
+  }
+
+  @Override
+  public boolean isDirectory(String path) throws IOException {
+    if (!isEnvironmentPFS()) {
+      return super.isDirectory(path);
+    }
+    if (isRoot(path)) {
+      return true;
+    }
+    String pathKey = stripPrefixIfPresent(path);
+    try {
+      ObjectMetadata meta = mClient.getObjectMetadata(mBucketName, pathKey);
+      if (meta != null && isDirectoryInPFS(meta)) {
+        return true;
+      }
+      return false;
+    } catch (ObsException e) {
+      LOG.warn("Failed to get Object {}", pathKey, e);
+      return false;
     }
   }
 
@@ -288,4 +327,32 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
       throw new IOException(e.getMessage());
     }
   }
+
+  @Override
+  public boolean renameDirectory(String src, String dst) throws IOException {
+    if (!isEnvironmentPFS()) {
+      return super.renameDirectory(src, dst);
+    }
+    try {
+      RenameRequest request = new RenameRequest(mBucketName, stripPrefixIfPresent(src), stripPrefixIfPresent(dst));
+      RenameResult response = mClient.renameFolder(request);
+      if (isSuccessResponse(response.getStatusCode())) {
+        return true;
+      } else {
+        LOG.error("Failed to rename directory from {} to {}.", src, dst);
+        return false;
+      }
+    } catch (ObsException e) {
+      LOG.error("Failed to rename directory from {} to {}.", src, dst, e);
+      return false;
+    }
+  }
+
+  /**
+   * @param statusCode 200 OK, 201 Created, 204 No Content
+   */
+  private boolean isSuccessResponse(int statusCode) {
+    return statusCode == 200 || statusCode == 204;
+  }
+
 }
