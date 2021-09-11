@@ -93,8 +93,8 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
    * @param bucketName bucket name of user's configured Alluxio bucket
    * @param conf configuration for this UFS
    */
-  protected OBSUnderFileSystem(AlluxioURI uri, ObsClient obsClient, String bucketName, String bucketType,
-      UnderFileSystemConfiguration conf) {
+  protected OBSUnderFileSystem(AlluxioURI uri, ObsClient obsClient, String bucketName,
+                               String bucketType, UnderFileSystemConfiguration conf) {
     super(uri, conf);
     mClient = obsClient;
     mBucketName = bucketName;
@@ -125,6 +125,7 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
       return true;
     } catch (ObsException e) {
       LOG.error("Failed to rename file {} to {}", src, dst, e);
+      System.out.println("Failed to rename file " + src + " execption:" + e);
       return false;
     }
   }
@@ -192,7 +193,7 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
               && !isDirectory(request.getPrefix())) {
         result = null;
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       LOG.warn("Failed to list path {}", request.getPrefix(), e);
       result = null;
     }
@@ -201,8 +202,9 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
 
   private boolean isDirectoryInPFS(ObjectMetadata meta) {
     int mode = Integer.parseInt(meta.getMetadata().get("mode").toString());
-    if (mode < 0)
+    if (mode < 0) {
       return false;
+    }
     int ifDIr = 0x004000;
     return (ifDIr & mode) != 0;
   }
@@ -268,7 +270,8 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
         /**
          * When in PFS environment:
          * 1. Directory will be explicitly created and have object meta.
-         * 2. File will have object meta even if there is `/` at the end of the file name (e.g. `/dir1/file1/`)
+         * 2. File will have object meta even if there is `/` at
+         *    the end of the file name (e.g. `/dir1/file1/`).
          * However we should return null meta here.
          */
         if (isDirectoryInPFS(meta)) {
@@ -319,7 +322,8 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
   }
 
   @Override
-  protected InputStream openObject(String key, OpenOptions options, RetryPolicy retryPolicy) throws IOException {
+  protected InputStream openObject(String key, OpenOptions options,
+                                   RetryPolicy retryPolicy) throws IOException {
     try {
       return new OBSInputStream(mBucketName, key, mClient, options.getOffset(), retryPolicy,
           mUfsConf.getBytes(PropertyKey.UNDERFS_OBJECT_STORE_MULTI_RANGE_CHUNK_SIZE));
@@ -334,7 +338,8 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
       return super.renameDirectory(src, dst);
     }
     try {
-      RenameRequest request = new RenameRequest(mBucketName, stripPrefixIfPresent(src), stripPrefixIfPresent(dst));
+      RenameRequest request = new RenameRequest(mBucketName, stripPrefixIfPresent(src),
+              stripPrefixIfPresent(dst));
       RenameResult response = mClient.renameFolder(request);
       if (isSuccessResponse(response.getStatusCode())) {
         return true;
@@ -347,12 +352,10 @@ public class OBSUnderFileSystem extends ObjectUnderFileSystem {
       return false;
     }
   }
-
   /**
    * @param statusCode 200 OK, 201 Created, 204 No Content
    */
   private boolean isSuccessResponse(int statusCode) {
-    return statusCode == 200 || statusCode == 204;
+    return statusCode == 200 || statusCode == 204 || statusCode == 201;
   }
-
 }
